@@ -38,6 +38,10 @@ Komut çalıştıktan sonra tarayıcınızdan şu adrese gidebilirsiniz:
 * **Neden Seçildi?** Mezun profilleri, iş ilanları ve yetkilendirme modelleri arasındaki katı ilişkiler (Foreign Keys) ve ACID işlem güvenliği için en uygun çözümdür.
 * **Zayıf Olduğu Yön:** Yatayda ölçekleme (horizontal scaling / sharding) ve esnek şemasız veri yapıları (NoSQL) gerektiren durumlarda yapılandırması karmaşıktır.
 
+### 3. Yapay Zeka Asistanı: Antigravity
+* **Kullanılan Asistan:** Antigravity (Google DeepMind)
+* **Kullanım Kapsamı:** Mimari tasarım, kod yazımı ve hata ayıklama süreçlerinde ders kurallarına uygun eşlikçi geliştirici olarak kullanılmaktadır.
+
 ---
 
 ## 👥 Kullanıcı Rolleri ve Temel Özellikler
