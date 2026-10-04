@@ -1,99 +1,87 @@
 # 🎓 Alumni Tracking System (Mezun Takip Sistemi)
 
 > **26-27 Web Programming Dersi Dönem Projesi**  
-> Üniversite mezunları ile mevcut öğrenciler ve yönetim arasındaki iletişimi güçlendiren, mezunların kariyer yolculuklarını takip eden ve staj/iş fırsatlarını bir araya getiren kapsamlı web platformu.
+> **Ders:** YBSB3001 · Web Programming · Doç. Dr. Emre Akadal · İstanbul Üniversitesi İktisat Fakültesi YBS  
+> **Repo:** [github.com/tegmenbugo/alumni](https://github.com/tegmenbugo/alumni)
 
 ---
 
 ## 📌 Proje Amacı ve Kapsamı
-Bu sistem, mezunların mezuniyet sonrası kariyer adımlarını (çalıştıkları kurum, pozisyon, sektör, iletişim) güncel tutmalarını; mevcut öğrencilerin ise mezunların deneyimlerinden faydalanmasını ve staj/iş ilanlarına tek noktadan erişebilmesini amaçlar.
+Bu sistem, üniversite mezunları ile mevcut öğrenciler ve yönetim arasındaki iletişimi güçlendiren, mezunların kariyer yolculuklarını (kurum, pozisyon, sektör, iletişim) takip eden ve staj/iş fırsatlarını bir araya getiren web tabanlı bir Mezun Takip Platformudur.
+
+---
+
+## 🚀 Hızlı Başlangıç (One-Command Execution)
+
+Dersin temel kuralı uyarınca sistem tek bir komutla ayağa kalkmaktadır:
+
+```bash
+docker compose up
+```
+
+Komut çalıştıktan sonra tarayıcınızdan şu adrese gidebilirsiniz:
+👉 **`http://localhost:8000`** *(veya `http://localhost`)*
+
+*(Alternatif olarak yerel PHP ortamında çalıştırmak için: `php -S localhost:8000 index.php`)*
+
+---
+
+## 🛠️ Teknoloji Tercihleri ve Savunması (Stack Justification)
+
+*Ders sözleşmesi gereğince seçilen teknolojiler ve zayıf yönleri:*
+
+### 1. Backend: PHP 8.3 (Native & OOP)
+* **Neden Seçildi?** Web'in doğal dili olarak sıfır ek bağımlılıkla request-response döngüsünü, HTTP oturumlarını (session) ve routing mantığını en şeffaf şekilde yönetmeyi sağlar.
+* **Zayıf Olduğu Yön:** Asenkron I/O (event loop) ve CPU-yoğun uzun süreli arka plan iş parçacıklarını Node.js veya Go kadar doğal desteklemez; her istek tipik olarak yeni bir proses yaşam döngüsünde çalışır.
+
+### 2. Veritabanı: MySQL / MariaDB (Relational)
+* **Neden Seçildi?** Mezun profilleri, iş ilanları ve yetkilendirme modelleri arasındaki katı ilişkiler (Foreign Keys) ve ACID işlem güvenliği için en uygun çözümdür.
+* **Zayıf Olduğu Yön:** Yatayda ölçekleme (horizontal scaling / sharding) ve esnek şemasız veri yapıları (NoSQL) gerektiren durumlarda yapılandırması karmaşıktır.
 
 ---
 
 ## 👥 Kullanıcı Rolleri ve Temel Özellikler
 
 ### 1. 🎓 Mezun & Öğrenci Modülü
-- **Kayıt ve Profil:** Bölüm, mezuniyet yılı, biyografi, sosyal medya (LinkedIn, GitHub vb.), profil fotoğrafı ve CV yükleme.
-- **Kariyer Bilgisi:** Çalışma durumu (Özel Sektör, Kamu, Akademik, Yüksek Lisans, İş Arıyor), şirket adı ve unvanı.
-- **Mezun Ağı (Networking):** Mezunları bölüme, mezuniyet yılına, şehre veya çalışma alanına göre arama/filtreleme.
-- **İlanlar & Duyurular:** Yayınlanan iş/staj ilanlarını ve üniversite duyurularını görüntüleme.
+* **Kayıt ve Profil:** Bölüm, mezuniyet yılı, biyografi, sosyal medya, profil fotoğrafı ve CV yükleme.
+* **Kariyer Bilgisi:** Çalışma durumu (Özel Sektör, Kamu, Akademik, Yüksek Lisans, İş Arıyor), şirket adı ve unvanı.
+* **Mezun Ağı (Networking):** Bölüm, mezuniyet yılı, şehir ve çalışma alanına göre filtreleme ve arama.
+* **İlanlar & Duyurular:** İş/staj ilanlarını ve üniversite duyurularını görüntüleme.
 
-### 2. 💼 İşveren / Temsilci Modülü *(Opsiyonel)*
-- Şirket adına staj ve iş ilanı oluşturma, yayından kaldırma.
-
-### 3. 🛡️ Yönetici (Admin) Modülü
-- **Mezun Onaylama/Denetleme:** Kaydolan mezunların doğrulanması ve yönetimi.
-- **İlan & Duyuru Yönetimi:** İlanları onaylama, düzenleme ve silme.
-- **İstatistik & Raporlama:** Mezunların sektör dağılımı, istihdam oranı ve bölüm bazlı grafiksel raporlar.
+### 2. 🛡️ Yönetici (Admin) Modülü
+* **Mezun Onaylama/Denetleme:** Kaydolan mezunların doğrulanması ve yönetimi.
+* **İlan & Duyuru Yönetimi:** İlanları onaylama, düzenleme ve silme.
+* **İstatistik & Raporlama:** Mezunların sektör dağılımı, istihdam oranı ve bölüm bazlı grafiksel raporlar.
 
 ---
 
-## 🛠️ Teknoloji Yığını (Tech Stack)
-
-- **Backend:** PHP 8.x (Native PHP, OOP & PDO Mimarisi)
-- **Veritabanı:** MySQL / MariaDB (İlişkisel Veritabanı)
-- **Frontend:** HTML5, CSS3, JavaScript, Bootstrap 5 (Modern & Responsive UI)
-- **Güvenlik:** SQL Injection Koruması (Prepared Statements), XSS Koruması, CSRF Token, `password_hash()` Şifreleme, Session Yönetimi
-- **Sürüm Kontrolü:** Git & GitHub
-
----
-
-## 🗂️ Proje Dizin Yapısı (Planlanan Mimari)
+## 🗂️ Proje Dizin Yapısı
 
 ```text
-Alumni/
-├── config/              # Veritabanı ve genel sistem ayarları
-│   └── database.php     # PDO veritabanı bağlantı sınıfı
-├── public/              # Dışa açık web kök dizini
-│   ├── css/             # Özel stil dosyaları
-│   ├── js/              # İstemci tarafı scriptler
-│   ├── uploads/         # Yüklenen profil resimleri ve CV'ler
-│   └── index.php        # Uygulama giriş noktası
-├── views/               # Arayüz şablonları (HTML + PHP)
-│   ├── layouts/         # Header, footer, navbar bileşenleri
-│   ├── auth/            # Giriş, kayıt ekranları
-│   ├── profile/         # Profil detay ve düzenleme sayfaları
-│   ├── jobs/            # İlan listesi ve detayları
-│   └── admin/           # Yönetici paneli ve istatistikler
-├── src/                 # İş mantığı ve sınıflar (Controllers, Models, Helpers)
-│   ├── Auth.php         # Giriş/çıkış ve oturum kontrolleri
-│   ├── User.php         # Kullanıcı ve mezun veri işlemleri
-│   ├── Job.php          # İlan veri işlemleri
-│   └── Helper.php       # Güvenlik ve yardımcı fonksiyonlar
-├── sql/                 # Veritabanı şeması ve örnek veriler
-│   └── schema.sql       # Tablo yapısı (DDL)
-├── README.md            # Proje dokümantasyonu
-└── .gitignore           # Git takip dışı dosyalar
+alumni/
+├── Dockerfile           # Konteyner imaj tanımı (PHP 8.3 + Apache + mod_rewrite)
+├── docker-compose.yml   # Tek komutla ayağa kaldırma yapılandırması
+├── index.php            # Merkezi HTTP yönlendirici (Router)
+├── .htaccess            # Apache URL yeniden yazma kuralları
+├── .gitignore           # Git takip dışı dosyalar
+└── README.md            # Proje dokümantasyonu ve sözleşmesi
 ```
 
 ---
 
-## 🗓️ Dönem Yol Haritası (Development Roadmap)
+## 🗓️ Dönem Yol Haritası (Fourteen Weeks Roadmap)
 
-- [x] **Adım 1:** Repo ve çalışma ortamının hazırlanması, `README.md` dokümantasyonu.
-- [ ] **Adım 2:** Veritabanı şemasının (ERD) çizilmesi ve `schema.sql` oluşturulması.
-- [ ] **Adım 3:** Proje mimarisi, PDO bağlantısı ve temel şablon (Navbar, Header, Footer).
-- [ ] **Adım 4:** Güvenli Kimlik Doğrulama (Auth: Kayıt, Giriş, Session, Çıkış).
-- [ ] **Adım 5:** Mezun Profil Yönetimi (Profil güncelleme, fotoğraf/CV yükleme).
-- [ ] **Adım 6:** Mezun Listeleme, Dinamik Arama ve Filtreleme.
-- [ ] **Adım 7:** İş & Staj İlanları Modülü (CRUD).
-- [ ] **Adım 8:** Admin Yönetim Paneli, İstatistiksel Raporlar ve Güvenlik Testleri.
-- [ ] **Adım 9:** Final testleri, sunum ve teslimat hazırlığı.
-
----
-
-## 🚀 Yerel Geliştirme (Local Setup)
-
-1. Bu repoyu bilgisayarınıza klonlayın:
-   ```bash
-   git clone https://github.com/tegmenbugo/Alumni.git
-   ```
-2. Yerel PHP sunucusunu başlatın (veya MAMP/XAMPP kullanın):
-   ```bash
-   cd Alumni
-   php -S localhost:8000
-   ```
-3. Veritabanını içe aktarın:
-   - `sql/schema.sql` dosyasını MySQL veritabanınıza import edin.
-4. `config/database.php` dosyasındaki veritabanı kullanıcı adı ve şifrenizi güncelleyin.
-5. Tarayıcınızdan `http://localhost:8000` adresine gidin.
+* [x] **Week 01:** Project inception & fundamentals, repository setup, stack selection & justification.
+* [x] **Week 02:** Routing — the doors of the system (GET endpoints: `/Alumni`, `/hello`, `/hello/{name}`, `/sum/{n1}/{n2}`, `/about`, `/`).
+* [ ] **Week 03:** HTTP methods & CRUD.
+* [ ] **Week 04:** MVC architecture.
+* [ ] **Week 05:** Database & ORM.
+* [ ] **Week 06:** Database integration.
+* [ ] **Week 07:** Relational data & advanced routing.
+* [ ] **Week 08:** Midterm — code review.
+* [ ] **Week 09:** Middleware — the bouncer.
+* [ ] **Week 10:** Views & front-end integration.
+* [ ] **Week 11:** Authentication & authorization.
+* [ ] **Week 12:** Service layers.
+* [ ] **Week 13:** Deployment & CI/CD.
+* [ ] **Week 14:** Final presentations — system handover.
