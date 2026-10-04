@@ -59,13 +59,34 @@ Komut çalıştıktan sonra tarayıcınızdan şu adrese gidebilirsiniz:
 
 ---
 
+## 📡 Hafta 03: REST API & Swagger UI
+
+Sistem, veritabanı öncesi aşamada (`data/users.json`) üzerinden tam kapsamlı bir CRUD REST API sunmaktadır:
+
+* **Swagger UI Dokümantasyonu:** `http://localhost:8000/api/swagger`
+* **OpenAPI 3.0 Şeması:** `http://localhost:8000/api/openapi.json`
+
+| Metod | Uç Nokta (Endpoint) | Açıklama |
+| :--- | :--- | :--- |
+| `GET` | `/api/health` | Servis sağlık kontrolü (JSON) |
+| `GET` | `/api/users` | Tüm kullanıcıları listeleme (Read All) |
+| `POST` | `/api/users` | Yeni kullanıcı oluşturma (Create - 201 Created) |
+| `GET` | `/api/users/{id}` | ID ile kullanıcı getirme (Read One) |
+| `PUT` | `/api/users/{id}` | Kullanıcıyı tamamen güncelleme (Full Update) |
+| `PATCH` | `/api/users/{id}` | Belirli alanları güncelleme (Partial Update) |
+| `DELETE` | `/api/users/{id}` | Kullanıcıyı silme (Delete) |
+
+---
+
 ## 🗂️ Proje Dizin Yapısı
 
 ```text
 alumni/
+├── data/
+│   └── users.json       # JSON tabanlı veri deposu (Database-less persistence)
 ├── Dockerfile           # Konteyner imaj tanımı (PHP 8.3 + Apache + mod_rewrite)
 ├── docker-compose.yml   # Tek komutla ayağa kaldırma yapılandırması
-├── index.php            # Merkezi HTTP yönlendirici (Router)
+├── index.php            # Merkezi HTTP yönlendirici ve REST API
 ├── .htaccess            # Apache URL yeniden yazma kuralları
 ├── .gitignore           # Git takip dışı dosyalar
 └── README.md            # Proje dokümantasyonu ve sözleşmesi
@@ -77,7 +98,7 @@ alumni/
 
 * [x] **Week 01:** Project inception & fundamentals, repository setup, stack selection & justification.
 * [x] **Week 02:** Routing — the doors of the system (GET endpoints: `/Alumni`, `/hello`, `/hello/{name}`, `/sum/{n1}/{n2}`, `/about`, `/`).
-* [ ] **Week 03:** HTTP methods & CRUD.
+* [x] **Week 03:** HTTP methods & CRUD on `/api/users` (GET, POST, PUT, PATCH, DELETE) + Swagger UI at `/api/swagger`.
 * [ ] **Week 04:** MVC architecture.
 * [ ] **Week 05:** Database & ORM.
 * [ ] **Week 06:** Database integration.

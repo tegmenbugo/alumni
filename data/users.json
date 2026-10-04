@@ -1,0 +1,50 @@
+[
+    {
+        "id": 1,
+        "name": "Elif Kaya",
+        "email": "elif.kaya@alumni.iu.edu.tr",
+        "graduationYear": 2024,
+        "department": "Yönetim Bilişim Sistemleri",
+        "company": "Tech Solutions"
+    },
+    {
+        "id": 2,
+        "name": "Mert Aydın",
+        "email": "mert.aydin@alumni.iu.edu.tr",
+        "graduationYear": 2021,
+        "department": "Yönetim Bilişim Sistemleri",
+        "company": "Finansbank"
+    },
+    {
+        "id": 3,
+        "name": "Zeynep Arslan",
+        "email": "zeynep.arslan@alumni.iu.edu.tr",
+        "graduationYear": 2019,
+        "department": "İktisat",
+        "company": "E-Ticaret A.Ş."
+    },
+    {
+        "id": 4,
+        "name": "Can Öztürk",
+        "email": "can.ozturk@alumni.iu.edu.tr",
+        "graduationYear": 2023,
+        "department": "İşletme",
+        "company": "Global Danışmanlık"
+    },
+    {
+        "id": 5,
+        "name": "Battal Buğra Karataş",
+        "email": "bugrakaratas@alumni.iu.edu.tr",
+        "graduationYear": 2027,
+        "department": "Yönetim Bilişim Sistemleri",
+        "company": "Akadal Technology"
+    },
+    {
+        "id": 7,
+        "name": "Battal Buğra Karataş",
+        "email": "bugrakaratas@alumni.iu.edu.tr",
+        "graduationYear": 2027,
+        "department": "Yönetim Bilişim Sistemleri",
+        "company": "Akadal Technology"
+    }
+]
