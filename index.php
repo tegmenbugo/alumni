@@ -224,6 +224,12 @@ if ($path === '/api/openapi.json' && $method === 'GET') {
     ]);
 }
 
+// /swagger yazılırsa otomatik olarak /api/swagger adresine yönlendir
+if ($path === '/swagger' || $path === '/swagger/') {
+    header('Location: /api/swagger', true, 301);
+    exit;
+}
+
 // 7) GET /api/swagger -> Swagger UI Arayüzü
 if ($path === '/api/swagger' || $path === '/api/swagger/') {
     header('Content-Type: text/html; charset=utf-8');
