@@ -2,34 +2,26 @@
 namespace App\Controllers;
 
 use App\Models\User;
+use App\Core\View;
 use App\Core\Response;
 
 /**
- * UserController (MVC - Controller Katmanı)
- * /api/users CRUD işlemlerinin iş mantığını yönetir.
+ * UserController (MVC - Web Controller Katmanı)
+ * Web tarayıcısı üzerinden mezun/kullanıcı HTML arayüz CRUD işlemlerini yönetir.
  */
 class UserController
 {
-    private function getJsonInput(): ?array
-    {
-        $raw = file_get_contents('php://input');
-        if (empty($raw)) {
-            return null;
-        }
-        return json_decode($raw, true);
-    }
-
     /**
-     * GET /api/users - Tüm mezunları listele (Read All)
+     * GET /users - Mezun listesi arayüzü (READ ALL)
      */
     public function index(): void
     {
         $users = User::all();
-        Response::json($users, 200);
+        View::render('users/index', ['users' => $users]);
     }
 
     /**
-     * GET /api/users/{id} - ID ile tek mezun getir (Read One)
+     * GET /users/{id} - Tekil mezun profil kartı (READ ONE)
      */
     public function show(string $id): void
     {
@@ -37,93 +29,62 @@ class UserController
         $user = User::find($userId);
 
         if (!$user) {
-            Response::json(['error' => "ID {$userId} numaralı kullanıcı bulunamadı."], 404);
+            http_response_code(404);
+            echo "Kullanıcı bulunamadı (ID: {$userId})";
+            exit;
         }
 
-        Response::json($user, 200);
+        View::render('users/show', ['user' => $user]);
     }
 
     /**
-     * POST /api/users - Yeni mezun oluştur (Create)
+     * POST /users - Form üzerinden yeni mezun kaydı (CREATE)
      */
     public function store(): void
     {
-        $input = $this->getJsonInput();
+        $name = trim($_POST['name'] ?? '');
 
-        if (!$input || empty(trim($input['name'] ?? ''))) {
-            Response::json([
-                'error' => "Geçersiz istek. 'name' alanı zorunludur.",
-                'example' => [
-                    'name' => 'Elif Kaya',
-                    'graduationYear' => 2024,
-                    'email' => 'elif.kaya@alumni.iu.edu.tr',
-                    'department' => 'Yönetim Bilişim Sistemleri',
-                    'company' => 'Tech Corp'
-                ]
-            ], 400);
+        if (!empty($name)) {
+            User::create([
+                'name'           => $name,
+                'email'          => trim($_POST['email'] ?? ''),
+                'graduationYear' => !empty($_POST['graduationYear']) ? (int)$_POST['graduationYear'] : null,
+                'department'     => trim($_POST['department'] ?? ''),
+                'company'        => trim($_POST['company'] ?? '')
+            ]);
         }
 
-        $newUser = User::create($input);
-        Response::json($newUser, 201);
+        Response::redirect('/users');
     }
 
     /**
-     * PUT /api/users/{id} - Mezun bilgilerini tamamen güncelle (Full Update)
+     * POST /users/{id}/update - Mezun bilgilerini formdan güncelleme (UPDATE)
      */
     public function update(string $id): void
     {
         $userId = (int)$id;
-        $input = $this->getJsonInput();
+        $name = trim($_POST['name'] ?? '');
 
-        if (!$input || empty(trim($input['name'] ?? ''))) {
-            Response::json(['error' => "Geçersiz istek. 'name' alanı zorunludur."], 400);
+        if (!empty($name)) {
+            User::update($userId, [
+                'name'           => $name,
+                'email'          => trim($_POST['email'] ?? ''),
+                'graduationYear' => !empty($_POST['graduationYear']) ? (int)$_POST['graduationYear'] : null,
+                'department'     => trim($_POST['department'] ?? ''),
+                'company'        => trim($_POST['company'] ?? '')
+            ]);
         }
 
-        $updated = User::update($userId, $input);
-
-        if (!$updated) {
-            Response::json(['error' => "ID {$userId} numaralı kullanıcı bulunamadı."], 404);
-        }
-
-        Response::json($updated, 200);
+        Response::redirect('/users');
     }
 
     /**
-     * PATCH /api/users/{id} - Mezun alanını kısmen güncelle (Partial Update)
-     */
-    public function patch(string $id): void
-    {
-        $userId = (int)$id;
-        $input = $this->getJsonInput();
-
-        if (!$input) {
-            Response::json(['error' => 'Güncellenecek geçerli bir JSON gövdesi gönderiniz.'], 400);
-        }
-
-        $updated = User::patch($userId, $input);
-
-        if (!$updated) {
-            Response::json(['error' => "ID {$userId} numaralı kullanıcı bulunamadı."], 404);
-        }
-
-        Response::json($updated, 200);
-    }
-
-    /**
-     * DELETE /api/users/{id} - Mezun kaydını sil (Delete)
+     * POST /users/{id}/delete veya DELETE /users/{id} - Mezun kaydını silme (DELETE)
      */
     public function destroy(string $id): void
     {
         $userId = (int)$id;
-        $deleted = User::delete($userId);
-
-        if (!$deleted) {
-            Response::json(['error' => "ID {$userId} numaralı kullanıcı bulunamadı."], 404);
-        }
-
-        Response::json([
-            'message' => "ID {$userId} numaralı kullanıcı başarıyla silindi.",
-            'deletedUser' => $deleted
-        ], 200);
+        User::delete($userId);
+        Response::redirect('/users');
     }
 }

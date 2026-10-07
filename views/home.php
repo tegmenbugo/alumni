@@ -56,6 +56,13 @@
                             </thead>
                             <tbody>
                                 <tr>
+                                    <td><span class="badge bg-success">Web UI</span></td>
+                                    <td><span class="badge bg-success">GET</span></td>
+                                    <td><span class="endpoint-badge">/users</span></td>
+                                    <td><code>UserController::index()</code> (HTML Arayüzü)</td>
+                                    <td class="text-center"><a href="/users" class="btn btn-sm btn-success">Aç ➔</a></td>
+                                </tr>
+                                <tr>
                                     <td><span class="badge bg-info text-dark">Swagger</span></td>
                                     <td><span class="badge bg-success">GET</span></td>
                                     <td><span class="endpoint-badge">/api/swagger</span></td>
@@ -73,28 +80,28 @@
                                     <td><span class="badge bg-primary">API</span></td>
                                     <td><span class="badge bg-success">GET</span></td>
                                     <td><span class="endpoint-badge">/api/users</span></td>
-                                    <td><code>UserController::index()</code></td>
+                                    <td><code>ApiUserController::index()</code> (JSON)</td>
                                     <td class="text-center"><a href="/api/users" class="btn btn-sm btn-outline-primary" target="_blank">Aç ↗</a></td>
                                 </tr>
                                 <tr>
                                     <td><span class="badge bg-primary">API</span></td>
                                     <td><span class="badge bg-info text-dark">POST</span></td>
                                     <td><span class="endpoint-badge">/api/users</span></td>
-                                    <td><code>UserController::store()</code></td>
+                                    <td><code>ApiUserController::store()</code></td>
                                     <td class="text-center"><a href="/api/swagger" class="btn btn-sm btn-outline-info" target="_blank">Swagger'da Dene ↗</a></td>
                                 </tr>
                                 <tr>
                                     <td><span class="badge bg-primary">API</span></td>
                                     <td><span class="badge bg-warning text-dark">PUT / PATCH</span></td>
                                     <td><span class="endpoint-badge">/api/users/{id}</span></td>
-                                    <td><code>UserController::update() / patch()</code></td>
+                                    <td><code>ApiUserController::update() / patch()</code></td>
                                     <td class="text-center"><a href="/api/swagger" class="btn btn-sm btn-outline-warning" target="_blank">Swagger'da Dene ↗</a></td>
                                 </tr>
                                 <tr>
                                     <td><span class="badge bg-primary">API</span></td>
                                     <td><span class="badge bg-danger">DELETE</span></td>
                                     <td><span class="endpoint-badge">/api/users/{id}</span></td>
-                                    <td><code>UserController::destroy()</code></td>
+                                    <td><code>ApiUserController::destroy()</code></td>
                                     <td class="text-center"><a href="/api/swagger" class="btn btn-sm btn-outline-danger" target="_blank">Swagger'da Dene ↗</a></td>
                                 </tr>
                                 <tr>

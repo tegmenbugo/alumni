@@ -75,18 +75,22 @@ alumni/
 │   │   ├── Response.php                # Standart JSON, Text ve Redirect HTTP yanıt üreticisi
 │   │   └── View.php                    # views/ dizinindeki HTML şablonlarını veriyle birleştiren renderer
 │   │
-│   ├── Models/                         # [MODEL KATMANI (M)]
-│   │   └── User.php                    # Kullanıcı ve mezun verilerinin doğrulanması, CRUD operasyonları
+│   ├── Models/                         # [MODEL KATMANI (M) - Görev 2]
+│   │   └── User.php                    # PDO Database bağlantılı model; CRUD fonksiyonları (all, find, create, update, patch, delete)
 │   │
-│   └── Controllers/                    # [CONTROLLER KATMANI (C)]
+│   └── Controllers/                    # [CONTROLLER KATMANI (C) - Görev 3]
+│       ├── UserController.php          # [Web Controller] HTML arayüzü ve form CRUD işlemleri (/users)
+│       ├── ApiUserController.php       # [REST API Controller] JSON tabanlı CRUD uç noktaları (/api/users)
 │       ├── HomeController.php          # Web sayfaları (/, /hello, /sum, /about, /Alumni)
-│       ├── UserController.php          # REST API CRUD mantığı (/api/users - GET, POST, PUT, PATCH, DELETE)
 │       └── ApiController.php           # Sistem sağlığı (/api/health) ve Swagger/OpenAPI yönetimi
 │
 ├── views/                              # [VIEW KATMANI (V)]
 │   ├── home.php                        # Ana kontrol paneli ve uç nokta test arayüzü
 │   ├── about.php                       # Proje hakkında sayfası
-│   └── swagger.php                     # Swagger UI canlı dokümantasyon sayfası
+│   ├── swagger.php                     # Swagger UI canlı dokümantasyon sayfası
+│   └── users/                          # Mezun web arayüz şablonları
+│       ├── index.php                   # Mezun listesi tablosu & yeni mezun ekleme modalı
+│       └── show.php                    # Tekil mezun detay profil kartı
 │
 ├── Dockerfile                          # Konteyner ortam tanımı (PHP 8.3 + Apache + mod_rewrite)
 ├── docker-compose.yml                  # Tek komutla ayağa kaldırma orkestrasyonu
@@ -103,10 +107,11 @@ alumni/
 | Katman | Konum | Sorumluluk ve Görev Tanımı |
 | :--- | :--- | :--- |
 | **Front Controller** | `index.php` | Sistemin tek kapısıdır. PSR-4 standartlarında otomatik yükleyiciyi (Autoloader) başlatır, CORS ayarlarını yapar, rotaları tanımlar ve isteği `Router`'a iletir. |
-| **Model (M)** | `src/Models/User.php` | Veritabanı (Database) bağlantısını PDO (`Core\Database`) üzerinden kurar. SQL Prepared Statements kullanarak tüm CRUD (Create, Read, Update, Delete) operasyonlarını yürütür. Controller veritabanının yapısını bilmez; tüm sorgular Model içinde kapsüllenir. |
+| **Model (M)** | `src/Models/User.php` | **(Görev 2)** Veritabanı bağlantısını PDO (`Core\Database`) üzerinden kurar. SQL Prepared Statements kullanarak tüm CRUD (Create, Read, Update, Patch, Delete) operasyonlarını yürütür. Controller veritabanı sorgularının detayını bilmez; veritabanı mantığı Model içinde kapsüllenir. |
 | **View (V)** | `views/*.php` | Kullanıcının gördüğü sunum katmanıdır. `Core\View` sınıfı üzerinden çağrılır. Controller'dan aktarılan verileri modern HTML5 ve Bootstrap 5 bileşenleriyle görselleştirir. |
-| **Controller (C)** | `src/Controllers/*.php` | Model ile View arasındaki köprüdür. HTTP isteklerini yakalar, girdi doğrulamalarını (validation) yapar, ilgili Model metodunu tetikler ve sonucu `Response::json()` veya `View::render()` ile istemciye döndürür. |
-| **Core Engine** | `src/Core/*` | MVC omurgasını oluşturan `Router`, `Response` ve `View` motorudur. Harici kütüphane bağımlılığı olmaksızın RESTful rotaları ve HTTP durum kodlarını yönetir. |
+| **Web Controller (C)** | `src/Controllers/UserController.php` | **(Görev 3)** Tarayıcı kullanıcıları için mezun yönetimini sağlar. `GET /users`, `GET /users/{id}`, `POST /users` (Create), `POST /users/{id}/update` (Update), `POST /users/{id}/delete` (Delete) metodlarıyla HTML View üretir veya yönlendirme (redirect) yapar. |
+| **API Controller (C)** | `src/Controllers/ApiUserController.php` | **(Görev 3)** İstemciler/Swagger/Mobil uygulamalar için REST API hizmeti sunar. `GET /api/users`, `POST /api/users`, `GET /api/users/{id}`, `PUT /api/users/{id}`, `PATCH /api/users/{id}`, `DELETE /api/users/{id}` metodlarıyla JSON formatında yanıt üretir. |
+| **Core Engine** | `src/Core/*` | MVC omurgasını oluşturan `Database` (PDO Singleton), `Router`, `Response` ve `View` motorudur. Harici framework kütüphanesi olmadan RESTful rotaları ve HTTP durum kodlarını yönetir. |
 
 ---
 
@@ -128,22 +133,32 @@ alumni/
 
 ---
 
-## 📡 Aktif REST API & Swagger UI
+## 🌐 Web Arayüzü & REST API Uç Noktaları
 
-Sistem, `data/users.json` modeli üzerinden tam kapsamlı bir CRUD REST API sunmaktadır:
+Sistemde iki ayrı Controller üzerinden hem son kullanıcılar için HTML tabanlı web sayfaları, hem de harici istemciler/Swagger için REST API hizmeti sunulmaktadır:
 
-* **Swagger UI Dokümantasyonu:** `http://localhost:8000/api/swagger`
+### 1. Web Controller (`UserController`) - HTML Görünümleri & Formlar
+| Metod | Rota (Route) | Controller Metodu | Açıklama |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/users` | `UserController::index()` | Mezun listesi arayüzü ve yeni mezun ekleme modalı |
+| `GET` | `/users/{id}` | `UserController::show($id)` | Tekil mezun detay profil kartı |
+| `POST` | `/users` | `UserController::store()` | Web formu üzerinden yeni mezun ekleme (Redirect -> `/users`) |
+| `POST` | `/users/{id}/update` | `UserController::update($id)` | Web formu üzerinden mezun güncelleme |
+| `POST` | `/users/{id}/delete` | `UserController::destroy($id)` | Web arayüzü üzerinden mezun silme |
+
+### 2. REST API Controller (`ApiUserController`) - JSON Giriş/Çıkış
+* **Swagger UI Canlı Dokümantasyonu:** `http://localhost:8000/api/swagger`
 * **OpenAPI 3.0 Şeması:** `http://localhost:8000/api/openapi.json`
 
-| Metod | Uç Nokta (Endpoint) | İlgili Controller & Metod | Açıklama |
+| Metod | Uç Nokta (Endpoint) | Controller Metodu | Açıklama |
 | :--- | :--- | :--- | :--- |
 | `GET` | `/api/health` | `ApiController::health()` | Servis sağlık kontrolü (JSON) |
-| `GET` | `/api/users` | `UserController::index()` | Tüm kullanıcıları listeleme (Read All) |
-| `POST` | `/api/users` | `UserController::store()` | Yeni kullanıcı oluşturma (Create - 201 Created) |
-| `GET` | `/api/users/{id}` | `UserController::show($id)` | ID ile kullanıcı getirme (Read One) |
-| `PUT` | `/api/users/{id}` | `UserController::update($id)` | Kullanıcıyı tamamen güncelleme (Full Update) |
-| `PATCH` | `/api/users/{id}` | `UserController::patch($id)` | Belirli alanları güncelleme (Partial Update) |
-| `DELETE` | `/api/users/{id}` | `UserController::destroy($id)` | Kullanıcıyı silme (Delete) |
+| `GET` | `/api/users` | `ApiUserController::index()` | Tüm mezunları JSON olarak listeleme (Read All) |
+| `POST` | `/api/users` | `ApiUserController::store()` | Yeni mezun oluşturma (JSON input - 201 Created) |
+| `GET` | `/api/users/{id}` | `ApiUserController::show($id)` | ID ile mezun getirme (Read One - 200 / 404) |
+| `PUT` | `/api/users/{id}` | `ApiUserController::update($id)` | Mezunu tamamen güncelleme (Full Update) |
+| `PATCH` | `/api/users/{id}` | `ApiUserController::patch($id)` | Mezun alanını kısmen güncelleme (Partial Update) |
+| `DELETE` | `/api/users/{id}` | `ApiUserController::destroy($id)` | Mezun kaydını silme (Delete - 200 / 404) |
 
 ---
 

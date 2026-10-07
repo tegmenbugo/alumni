@@ -26,6 +26,7 @@ spl_autoload_register(function ($class) {
 use App\Core\Router;
 use App\Controllers\HomeController;
 use App\Controllers\UserController;
+use App\Controllers\ApiUserController;
 use App\Controllers\ApiController;
 
 // 2. Global CORS Başlıkları
@@ -55,14 +56,26 @@ $router->get('/swagger',          [ApiController::class, 'swaggerRedirect']);
 $router->get('/api/openapi.json', [ApiController::class, 'openapi']);
 
 // -------------------------------------------------------------
-// REST API & CRUD ROTALARI (Week 03 & 04)
+// WEB CONTROLLER ROTALARI: UserController (Week 04 - Görev 3)
+// HTML Arayüzü & Web Formları
 // -------------------------------------------------------------
-$router->get('/api/users',        [UserController::class, 'index']);
-$router->post('/api/users',       [UserController::class, 'store']);
-$router->get('/api/users/{id}',   [UserController::class, 'show']);
-$router->put('/api/users/{id}',   [UserController::class, 'update']);
-$router->patch('/api/users/{id}', [UserController::class, 'patch']);
-$router->delete('/api/users/{id}',[UserController::class, 'destroy']);
+$router->get('/users',               [UserController::class, 'index']);
+$router->post('/users',              [UserController::class, 'store']);
+$router->get('/users/{id}',          [UserController::class, 'show']);
+$router->post('/users/{id}/update',  [UserController::class, 'update']);
+$router->post('/users/{id}/delete',  [UserController::class, 'destroy']);
+$router->delete('/users/{id}',       [UserController::class, 'destroy']);
+
+// -------------------------------------------------------------
+// REST API CONTROLLER ROTALARI: ApiUserController (Week 04 - Görev 3)
+// JSON Giriş / JSON Çıkış REST CRUD Uç Noktaları
+// -------------------------------------------------------------
+$router->get('/api/users',        [ApiUserController::class, 'index']);
+$router->post('/api/users',       [ApiUserController::class, 'store']);
+$router->get('/api/users/{id}',   [ApiUserController::class, 'show']);
+$router->put('/api/users/{id}',   [ApiUserController::class, 'update']);
+$router->patch('/api/users/{id}', [ApiUserController::class, 'patch']);
+$router->delete('/api/users/{id}',[ApiUserController::class, 'destroy']);
 
 // 4. İsteği Yönlendir (Dispatch)
 $router->dispatch();
