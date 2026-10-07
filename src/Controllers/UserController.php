@@ -38,23 +38,47 @@ class UserController
     }
 
     /**
-     * POST /users - Form üzerinden yeni mezun kaydı (CREATE)
+     * POST /users - Form üzerinden yeni mezun kaydı (CREATE - View Layer)
      */
     public function store(): void
     {
         $name = trim($_POST['name'] ?? '');
+        $email = trim($_POST['email'] ?? '');
+        $gradYear = !empty($_POST['graduationYear']) ? (int)$_POST['graduationYear'] : null;
+        $dept = trim($_POST['department'] ?? '');
+        $company = trim($_POST['company'] ?? '');
 
+        // JSON gövdesi gelmişse de destekle
+        if (empty($name)) {
+            $raw = file_get_contents('php://input');
+            $json = json_decode($raw, true);
+            if (is_array($json)) {
+                $name = trim($json['name'] ?? '');
+                $email = trim($json['email'] ?? '');
+                $gradYear = !empty($json['graduationYear']) ? (int)$json['graduationYear'] : null;
+                $dept = trim($json['department'] ?? '');
+                $company = trim($json['company'] ?? '');
+            }
+        }
+
+        $message = null;
         if (!empty($name)) {
             User::create([
                 'name'           => $name,
-                'email'          => trim($_POST['email'] ?? ''),
-                'graduationYear' => !empty($_POST['graduationYear']) ? (int)$_POST['graduationYear'] : null,
-                'department'     => trim($_POST['department'] ?? ''),
-                'company'        => trim($_POST['company'] ?? '')
+                'email'          => $email,
+                'graduationYear' => $gradYear,
+                'department'     => $dept,
+                'company'        => $company
             ]);
+            $message = "'{$name}' isimli mezun başarıyla kaydedildi! (POST /users -> UserController::store)";
         }
 
-        Response::redirect('/users');
+        // İstek tamamlandığında HTML Arayüz Katmanını (View) döndür
+        $users = User::all();
+        View::render('users/index', [
+            'users'   => $users,
+            'message' => $message
+        ]);
     }
 
     /**

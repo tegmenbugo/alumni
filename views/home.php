@@ -59,8 +59,15 @@
                                     <td><span class="badge bg-success">Web UI</span></td>
                                     <td><span class="badge bg-success">GET</span></td>
                                     <td><span class="endpoint-badge">/users</span></td>
-                                    <td><code>UserController::index()</code> (HTML Arayüzü)</td>
+                                    <td><code>UserController::index()</code> (HTML Arayüzü / View Layer)</td>
                                     <td class="text-center"><a href="/users" class="btn btn-sm btn-success">Aç ➔</a></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="badge bg-success">Web UI</span></td>
+                                    <td><span class="badge bg-info text-dark">POST</span></td>
+                                    <td><span class="endpoint-badge">/users</span></td>
+                                    <td><code>UserController::store()</code> (HTML Form Kaydı / View Layer)</td>
+                                    <td class="text-center"><a href="/users" class="btn btn-sm btn-outline-success">Forma Git ➔</a></td>
                                 </tr>
                                 <tr>
                                     <td><span class="badge bg-info text-dark">Swagger</span></td>

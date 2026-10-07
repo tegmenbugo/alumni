@@ -137,14 +137,16 @@ alumni/
 
 Sistemde iki ayrı Controller üzerinden hem son kullanıcılar için HTML tabanlı web sayfaları, hem de harici istemciler/Swagger için REST API hizmeti sunulmaktadır:
 
-### 1. Web Controller (`UserController`) - HTML Görünümleri & Formlar
-| Metod | Rota (Route) | Controller Metodu | Açıklama |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/users` | `UserController::index()` | Mezun listesi arayüzü ve yeni mezun ekleme modalı |
-| `GET` | `/users/{id}` | `UserController::show($id)` | Tekil mezun detay profil kartı |
-| `POST` | `/users` | `UserController::store()` | Web formu üzerinden yeni mezun ekleme (Redirect -> `/users`) |
-| `POST` | `/users/{id}/update` | `UserController::update($id)` | Web formu üzerinden mezun güncelleme |
-| `POST` | `/users/{id}/delete` | `UserController::destroy($id)` | Web arayüzü üzerinden mezun silme |
+### 1. Web Controller (`UserController`) - HTML Arayüzü & Görünüm Katmanı (View Layer - Görev 5)
+> **Not:** Bu rotalar API/JSON **döndürmez**. Doğrudan tarayıcıda çalışan ve Bootstrap 5 ile biçimlendirilmiş saf HTML kullanıcı arayüzü (`views/users/index.php`) sunar.
+
+| Metod | Rota (Route) | Controller Metodu | Yanıt Formatı | Açıklama |
+| :--- | :--- | :--- | :--- | :--- |
+| `GET` | `/users` | `UserController::index()` | `text/html` (View) | Mezun listesi arayüzü ve yeni mezun ekleme formu |
+| `POST` | `/users` | `UserController::store()` | `text/html` (View) | HTML formundan yeni mezun kaydı ve güncel liste arayüzü |
+| `GET` | `/users/{id}` | `UserController::show($id)` | `text/html` (View) | Tekil mezun detay profil kartı |
+| `POST` | `/users/{id}/update` | `UserController::update($id)` | `text/html` (View) | Web formu üzerinden mezun güncelleme |
+| `POST` | `/users/{id}/delete` | `UserController::destroy($id)` | `text/html` (View) | Web arayüzü üzerinden mezun silme |
 
 ### 2. REST API Controller (`ApiUserController`) - JSON Giriş/Çıkış
 * **Swagger UI Canlı Dokümantasyonu:** `http://localhost:8000/api/swagger`

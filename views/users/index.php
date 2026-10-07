@@ -23,14 +23,73 @@
                 <div class="card hero-card p-4 p-md-5 bg-white mb-4">
                     <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
                         <div>
-                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2 rounded-pill mb-2">
-                                👥 Web Controller: UserController::index()
-                            </span>
-                            <h2 class="fw-bold mb-0">Mezun Rehberi (Alumni Directory)</h2>
+                            <div class="d-flex gap-2 mb-2">
+                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-1 rounded-pill">
+                                    🌐 GET /users & POST /users
+                                </span>
+                                <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-1 rounded-pill">
+                                    🏛️ Controller: UserController (Web View Layer)
+                                </span>
+                            </div>
+                            <h2 class="fw-bold mb-0">Mezun Yönetim Arayüzü (Alumni Directory)</h2>
+                            <p class="text-muted small mb-0 mt-1">Bu sayfa JSON/API yerine doğrudan HTML kullanıcı arayüzü sunan View katmanıdır.</p>
                         </div>
                         <button class="btn btn-success fw-semibold" data-bs-toggle="modal" data-bs-target="#addUserModal">
-                            + Yeni Mezun Ekle
+                            + Modal ile Ekle
                         </button>
+                    </div>
+
+                    <?php if (!empty($message)): ?>
+                        <div class="alert alert-success alert-dismissible fade show d-flex align-items-center mb-4" role="alert">
+                            <span class="fs-4 me-2">🎉</span>
+                            <div>
+                                <strong>İşlem Başarılı!</strong> <?= htmlspecialchars($message) ?>
+                            </div>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Kapat"></button>
+                        </div>
+                    <?php elseif (isset($_GET['success'])): ?>
+                        <div class="alert alert-success alert-dismissible fade show d-flex align-items-center mb-4" role="alert">
+                            <span class="fs-4 me-2">🎉</span>
+                            <div>
+                                <strong>İşlem Başarılı!</strong> Yeni mezun kaydı <code>POST /users</code> üzerinden veritabanına eklendi.
+                            </div>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Kapat"></button>
+                        </div>
+                    <?php endif; ?>
+
+                    <!-- Inline Yeni Mezun Ekleme Formu (View Layer - POST /users) -->
+                    <div class="card bg-light border-0 rounded-3 p-4 mb-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <span class="badge bg-success me-2">POST /users</span>
+                            <h5 class="fw-bold mb-0">Yeni Mezun Ekle (HTML Web Formu)</h5>
+                        </div>
+                        <form action="/users" method="POST" class="row g-3">
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold small">Ad Soyad *</label>
+                                <input type="text" name="name" class="form-control" placeholder="Örn: Ayşe Demir" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold small">E-Posta</label>
+                                <input type="email" name="email" class="form-control" placeholder="ayse.demir@alumni.iu.edu.tr">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold small">Mezuniyet Yılı</label>
+                                <input type="number" name="graduationYear" class="form-control" placeholder="2025" value="2025">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold small">Bölüm</label>
+                                <input type="text" name="department" class="form-control" placeholder="Yönetim Bilişim Sistemleri">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold small">Çalıştığı Şirket</label>
+                                <input type="text" name="company" class="form-control" placeholder="Örn: Trendyol">
+                            </div>
+                            <div class="col-12 text-end">
+                                <button type="submit" class="btn btn-success px-4 fw-semibold">
+                                    ➕ Mezun Kaydet (POST /users)
+                                </button>
+                            </div>
+                        </form>
                     </div>
 
                     <!-- User Table -->
