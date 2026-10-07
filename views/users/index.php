@@ -119,7 +119,9 @@
                                             <td class="text-center">
                                                 <div class="btn-group btn-group-sm">
                                                     <a href="/users/<?= $u['id'] ?>" class="btn btn-outline-primary">Profil</a>
-                                                    <form action="/users/<?= $u['id'] ?>/delete" method="POST" class="d-inline" onsubmit="return confirm('Silmek istediğinize emin misiniz?');">
+                                                    <a href="/users/<?= $u['id'] ?>/edit" class="btn btn-outline-warning">Düzenle</a>
+                                                    <form action="/users/<?= $u['id'] ?>/delete" method="POST" class="d-inline"
+                                                          onsubmit="return confirm('<?= htmlspecialchars($u['name']) ?> isimli mezunu silmek istediğinize emin misiniz?');">
                                                         <button type="submit" class="btn btn-outline-danger">Sil</button>
                                                     </form>
                                                 </div>

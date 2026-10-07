@@ -46,11 +46,15 @@
                         </div>
                     </div>
 
-                    <div class="d-flex justify-content-between align-items-center">
+                    <div class="d-flex justify-content-between align-items-center gap-2">
                         <a href="/users" class="btn btn-secondary">← Geri Dön</a>
-                        <form action="/users/<?= $user['id'] ?>/delete" method="POST" onsubmit="return confirm('Bu mezunu silmek istediğinize emin misiniz?');">
-                            <button type="submit" class="btn btn-danger">Mezunu Sil (UserController::destroy)</button>
-                        </form>
+                        <div class="d-flex gap-2">
+                            <a href="/users/<?= $user['id'] ?>/edit" class="btn btn-warning fw-semibold">✏️ Düzenle (UserController::edit)</a>
+                            <form action="/users/<?= $user['id'] ?>/delete" method="POST"
+                                  onsubmit="return confirm('<?= htmlspecialchars($user['name']) ?> isimli mezunu silmek istediğinize emin misiniz?');">
+                                <button type="submit" class="btn btn-danger">🗑️ Sil (UserController::destroy)</button>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>

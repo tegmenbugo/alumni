@@ -56,15 +56,16 @@ $router->get('/swagger',          [ApiController::class, 'swaggerRedirect']);
 $router->get('/api/openapi.json', [ApiController::class, 'openapi']);
 
 // -------------------------------------------------------------
-// WEB CONTROLLER ROTALARI: UserController (Week 04 - Görev 3 & 4)
-// HTML Arayüzü & Web Formları
+// WEB CONTROLLER ROTALARI: UserController (Week 04 - Görev 3 & 4 & 5 & 6)
+// Tüm CRUD işlemleri HTML View Layer ile — JSON yok, API yok
 // -------------------------------------------------------------
-$router->get('/users',               [UserController::class, 'index']);
-$router->post('/users',              [UserController::class, 'store']);
-$router->get('/users/{id}',          [UserController::class, 'show']);
-$router->post('/users/{id}/update',  [UserController::class, 'update']);
-$router->post('/users/{id}/delete',  [UserController::class, 'destroy']);
-$router->delete('/users/{id}',       [UserController::class, 'destroy']);
+$router->get('/users',               [UserController::class, 'index']);    // READ ALL
+$router->post('/users',              [UserController::class, 'store']);    // CREATE
+$router->get('/users/{id}',          [UserController::class, 'show']);     // READ ONE
+$router->get('/users/{id}/edit',     [UserController::class, 'edit']);     // EDIT FORM
+$router->post('/users/{id}/update',  [UserController::class, 'update']);  // UPDATE
+$router->post('/users/{id}/delete',  [UserController::class, 'destroy']); // DELETE
+$router->delete('/users/{id}',       [UserController::class, 'destroy']); // DELETE (REST)
 
 // -------------------------------------------------------------
 // REST API CONTROLLER ROTALARI: ApiUserController (Week 04 - Görev 3 & 4)

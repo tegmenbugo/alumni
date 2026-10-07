@@ -8,11 +8,23 @@ use App\Core\Response;
 /**
  * UserController (MVC - Web Controller Katmanı)
  * Web tarayıcısı üzerinden mezun/kullanıcı HTML arayüz CRUD işlemlerini yönetir.
+ * Tüm metodlar JSON değil; View katmanı (HTML) döndürür.
+ *
+ * CRUD Rotaları:
+ *   READ   → GET  /users             → index()
+ *   READ   → GET  /users/{id}        → show($id)
+ *   READ   → GET  /users/{id}/edit   → edit($id)
+ *   CREATE → POST /users             → store()
+ *   UPDATE → POST /users/{id}/update → update($id)
+ *   DELETE → POST /users/{id}/delete → destroy($id)
  */
 class UserController
 {
+    // -------------------------------------------------------------------------
+    // READ ALL — GET /users
+    // -------------------------------------------------------------------------
     /**
-     * GET /users - Mezun listesi arayüzü (READ ALL)
+     * Mezun listesi arayüzü ve inline kayıt formu (View Layer)
      */
     public function index(): void
     {
@@ -20,95 +32,138 @@ class UserController
         View::render('users/index', ['users' => $users]);
     }
 
+    // -------------------------------------------------------------------------
+    // READ ONE — GET /users/{id}
+    // -------------------------------------------------------------------------
     /**
-     * GET /users/{id} - Tekil mezun profil kartı (READ ONE)
+     * Tekil mezun profil kartı (View Layer)
      */
     public function show(string $id): void
     {
-        $userId = (int)$id;
-        $user = User::find($userId);
+        $user = User::find((int)$id);
 
         if (!$user) {
             http_response_code(404);
-            echo "Kullanıcı bulunamadı (ID: {$userId})";
+            echo "404 — Mezun bulunamadı (ID: " . htmlspecialchars($id) . ")";
             exit;
         }
 
         View::render('users/show', ['user' => $user]);
     }
 
+    // -------------------------------------------------------------------------
+    // EDIT FORM — GET /users/{id}/edit
+    // -------------------------------------------------------------------------
     /**
-     * POST /users - Form üzerinden yeni mezun kaydı (CREATE - View Layer)
+     * Mezun düzenleme formu (View Layer — boş form, mevcut verilerle dolu)
+     */
+    public function edit(string $id): void
+    {
+        $user = User::find((int)$id);
+
+        if (!$user) {
+            http_response_code(404);
+            echo "404 — Mezun bulunamadı (ID: " . htmlspecialchars($id) . ")";
+            exit;
+        }
+
+        View::render('users/edit', ['user' => $user, 'message' => null]);
+    }
+
+    // -------------------------------------------------------------------------
+    // CREATE — POST /users
+    // -------------------------------------------------------------------------
+    /**
+     * Formdan yeni mezun kaydı; kayıt sonrası güncel liste View'i döndürür
      */
     public function store(): void
     {
-        $name = trim($_POST['name'] ?? '');
-        $email = trim($_POST['email'] ?? '');
-        $gradYear = !empty($_POST['graduationYear']) ? (int)$_POST['graduationYear'] : null;
-        $dept = trim($_POST['department'] ?? '');
+        $name    = trim($_POST['name'] ?? '');
+        $email   = trim($_POST['email'] ?? '');
+        $year    = !empty($_POST['graduationYear']) ? (int)$_POST['graduationYear'] : null;
+        $dept    = trim($_POST['department'] ?? '');
         $company = trim($_POST['company'] ?? '');
 
-        // JSON gövdesi gelmişse de destekle
-        if (empty($name)) {
-            $raw = file_get_contents('php://input');
-            $json = json_decode($raw, true);
-            if (is_array($json)) {
-                $name = trim($json['name'] ?? '');
-                $email = trim($json['email'] ?? '');
-                $gradYear = !empty($json['graduationYear']) ? (int)$json['graduationYear'] : null;
-                $dept = trim($json['department'] ?? '');
-                $company = trim($json['company'] ?? '');
-            }
-        }
-
         $message = null;
+
         if (!empty($name)) {
             User::create([
                 'name'           => $name,
                 'email'          => $email,
-                'graduationYear' => $gradYear,
+                'graduationYear' => $year,
                 'department'     => $dept,
-                'company'        => $company
+                'company'        => $company,
             ]);
-            $message = "'{$name}' isimli mezun başarıyla kaydedildi! (POST /users -> UserController::store)";
+            $message = "✅ '{$name}' isimli mezun başarıyla eklendi! (POST /users → UserController::store)";
         }
 
-        // İstek tamamlandığında HTML Arayüz Katmanını (View) döndür
+        // View Layer: redirect yerine güncel listeyi HTML olarak render et
         $users = User::all();
         View::render('users/index', [
             'users'   => $users,
-            'message' => $message
+            'message' => $message,
         ]);
     }
 
+    // -------------------------------------------------------------------------
+    // UPDATE — POST /users/{id}/update
+    // -------------------------------------------------------------------------
     /**
-     * POST /users/{id}/update - Mezun bilgilerini formdan güncelleme (UPDATE)
+     * Formdan gelen verilerle mezun güncelleme; sonrası edit view döndürür
      */
     public function update(string $id): void
     {
-        $userId = (int)$id;
-        $name = trim($_POST['name'] ?? '');
+        $userId  = (int)$id;
+        $name    = trim($_POST['name'] ?? '');
+        $email   = trim($_POST['email'] ?? '');
+        $year    = !empty($_POST['graduationYear']) ? (int)$_POST['graduationYear'] : null;
+        $dept    = trim($_POST['department'] ?? '');
+        $company = trim($_POST['company'] ?? '');
+
+        $message = null;
 
         if (!empty($name)) {
             User::update($userId, [
                 'name'           => $name,
-                'email'          => trim($_POST['email'] ?? ''),
-                'graduationYear' => !empty($_POST['graduationYear']) ? (int)$_POST['graduationYear'] : null,
-                'department'     => trim($_POST['department'] ?? ''),
-                'company'        => trim($_POST['company'] ?? '')
+                'email'          => $email,
+                'graduationYear' => $year,
+                'department'     => $dept,
+                'company'        => $company,
             ]);
+            $message = "✅ Mezun bilgileri başarıyla güncellendi! (POST /users/{$userId}/update → UserController::update)";
         }
 
-        Response::redirect('/users');
+        // View Layer: güncellenmiş kayıtla edit formunu tekrar render et
+        $user = User::find($userId);
+        if (!$user) {
+            Response::redirect('/users');
+        }
+
+        View::render('users/edit', [
+            'user'    => $user,
+            'message' => $message,
+        ]);
     }
 
+    // -------------------------------------------------------------------------
+    // DELETE — POST /users/{id}/delete
+    // -------------------------------------------------------------------------
     /**
-     * POST /users/{id}/delete veya DELETE /users/{id} - Mezun kaydını silme (DELETE)
+     * Mezun sil; silme sonrası güncel liste View'ini döndürür
      */
     public function destroy(string $id): void
     {
         $userId = (int)$id;
+        $user   = User::find($userId);
+        $name   = $user ? $user['name'] : "ID #{$userId}";
+
         User::delete($userId);
-        Response::redirect('/users');
+
+        // View Layer: redirect yerine güncel listeyi HTML olarak render et
+        $users = User::all();
+        View::render('users/index', [
+            'users'   => $users,
+            'message' => "🗑️ '{$name}' isimli mezun silindi. (POST /users/{$userId}/delete → UserController::destroy)",
+        ]);
     }
 }
