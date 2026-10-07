@@ -56,7 +56,7 @@ $router->get('/swagger',          [ApiController::class, 'swaggerRedirect']);
 $router->get('/api/openapi.json', [ApiController::class, 'openapi']);
 
 // -------------------------------------------------------------
-// WEB CONTROLLER ROTALARI: UserController (Week 04 - Görev 3)
+// WEB CONTROLLER ROTALARI: UserController (Week 04 - Görev 3 & 4)
 // HTML Arayüzü & Web Formları
 // -------------------------------------------------------------
 $router->get('/users',               [UserController::class, 'index']);
@@ -67,8 +67,8 @@ $router->post('/users/{id}/delete',  [UserController::class, 'destroy']);
 $router->delete('/users/{id}',       [UserController::class, 'destroy']);
 
 // -------------------------------------------------------------
-// REST API CONTROLLER ROTALARI: ApiUserController (Week 04 - Görev 3)
-// JSON Giriş / JSON Çıkış REST CRUD Uç Noktaları
+// REST API CONTROLLER ROTALARI: ApiUserController (Week 04 - Görev 3 & 4)
+// JSON Giriş / JSON Çıkış REST CRUD Uç Noktaları (Swagger ile Tam Senkronize)
 // -------------------------------------------------------------
 $router->get('/api/users',        [ApiUserController::class, 'index']);
 $router->post('/api/users',       [ApiUserController::class, 'store']);

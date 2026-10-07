@@ -160,6 +160,12 @@ Sistemde iki ayrı Controller üzerinden hem son kullanıcılar için HTML taban
 | `PATCH` | `/api/users/{id}` | `ApiUserController::patch($id)` | Mezun alanını kısmen güncelleme (Partial Update) |
 | `DELETE` | `/api/users/{id}` | `ApiUserController::destroy($id)` | Mezun kaydını silme (Delete - 200 / 404) |
 
+### 📜 Swagger & API Dokümantasyon Senkronizasyon İlkesi (Continuous API Documentation Policy)
+
+> **Mimari Kural & Geliştirme İlkesi:**  
+> Projede eklenen, güncellenen veya silinen her API rotası ve controller operasyonu (`ApiUserController`, `ApiController` vb.) için Swagger UI (`/api/swagger`) ve OpenAPI 3.0 şeması (`/api/openapi.json`) **her seferinde otomatik olarak senkronize edilir ve güncel tutulur.**  
+> Kod tabanındaki değişikliklerin dokümantasyona yansıtılması projenin ayrılmaz bir gerekliliği ve birinci sınıf sözleşmesi (API contract) olduğundan; her geliştirme adımında ayrıca *"Swagger'ı güncelleyin"* uyarısı yapmaya gerek kalmaksızın dokümantasyon sürekliliği sistem seviyesinde garanti altındadır.
+
 ---
 
 ## 🗓️ Dönem Yol Haritası (Fourteen Weeks Roadmap)
@@ -167,7 +173,7 @@ Sistemde iki ayrı Controller üzerinden hem son kullanıcılar için HTML taban
 * [x] **Week 01:** Project inception & fundamentals, repository setup, stack selection & justification.
 * [x] **Week 02:** Routing — the doors of the system (GET endpoints: `/Alumni`, `/hello`, `/hello/{name}`, `/sum/{n1}/{n2}`, `/about`, `/`).
 * [x] **Week 03:** HTTP methods & CRUD on `/api/users` (GET, POST, PUT, PATCH, DELETE) + Swagger UI at `/api/swagger`.
-* [x] **Week 04:** MVC architecture (Decoupled Front Controller, Router, Controllers, Models, Views).
+* [x] **Week 04:** MVC architecture (Decoupled Front Controller, Router, Controllers [UserController & ApiUserController], Models [PDO User], Views, and synchronized Swagger UI).
 * [ ] **Week 05:** Database & ORM.
 * [ ] **Week 06:** Database integration.
 * [ ] **Week 07:** Relational data & advanced routing.

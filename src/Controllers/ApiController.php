@@ -48,8 +48,18 @@ class ApiController
             'openapi' => '3.0.0',
             'info' => [
                 'title'       => 'Alumni Tracking System API',
-                'description' => 'YBSB3001 Web Programming - MVC Architecture & REST Endpoints',
+                'description' => "YBSB3001 Web Programming - MVC Architecture & REST Endpoints.\n\n• REST API uç noktaları ApiUserController tarafından yönetilmektedir.\n• Web HTML arayüzü rotaları (/users) UserController tarafından yönetilmektedir.\n• Swagger/OpenAPI şeması her rota ve controller değişikliğinde sürekli güncel tutulur.",
                 'version'     => '1.0.0'
+            ],
+            'tags' => [
+                [
+                    'name'        => 'ApiUserController',
+                    'description' => 'Mezun REST API CRUD operasyonları (JSON girdi / JSON çıktı)'
+                ],
+                [
+                    'name'        => 'System',
+                    'description' => 'Sistem sağlığı ve meta bilgiler'
+                ]
             ],
             'servers' => [
                 ['url' => '/', 'description' => 'Mevcut Sunucu']
@@ -57,7 +67,8 @@ class ApiController
             'paths' => [
                 '/api/health' => [
                     'get' => [
-                        'summary'   => 'Sistem sağlık kontrolü',
+                        'tags'      => ['System'],
+                        'summary'   => 'Sistem sağlık kontrolü (ApiController::health)',
                         'responses' => [
                             '200' => ['description' => 'Sistem çalışıyor']
                         ]
@@ -65,13 +76,15 @@ class ApiController
                 ],
                 '/api/users' => [
                     'get' => [
-                        'summary'   => 'Tüm kullanıcıları listele (Read All)',
+                        'tags'      => ['ApiUserController'],
+                        'summary'   => 'Tüm mezunları listele (Read All) - ApiUserController::index',
                         'responses' => [
-                            '200' => ['description' => 'Kullanıcı listesi']
+                            '200' => ['description' => 'Mezun kullanıcı listesi (JSON)']
                         ]
                     ],
                     'post' => [
-                        'summary'     => 'Yeni kullanıcı oluştur (Create)',
+                        'tags'        => ['ApiUserController'],
+                        'summary'     => 'Yeni mezun oluştur (Create) - ApiUserController::store',
                         'requestBody' => [
                             'required' => true,
                             'content'  => [
@@ -91,24 +104,26 @@ class ApiController
                             ]
                         ],
                         'responses' => [
-                            '201' => ['description' => 'Kullanıcı başarıyla oluşturuldu'],
-                            '400' => ['description' => 'Geçersiz istek']
+                            '201' => ['description' => 'Mezun başarıyla oluşturuldu'],
+                            '400' => ['description' => 'Geçersiz istek (name zorunludur)']
                         ]
                     ]
                 ],
                 '/api/users/{id}' => [
                     'get' => [
-                        'summary'    => 'ID ile tek kullanıcı getir (Read One)',
+                        'tags'       => ['ApiUserController'],
+                        'summary'    => 'ID ile tek mezun getir (Read One) - ApiUserController::show',
                         'parameters' => [
                             ['name' => 'id', 'in' => 'path', 'required' => true, 'schema' => ['type' => 'integer']]
                         ],
                         'responses' => [
-                            '200' => ['description' => 'Kullanıcı bulundu'],
-                            '404' => ['description' => 'Kullanıcı bulunamadı']
+                            '200' => ['description' => 'Mezun bulundu'],
+                            '404' => ['description' => 'Mezun bulunamadı']
                         ]
                     ],
                     'put' => [
-                        'summary'    => 'Kullanıcıyı tamamen güncelle (Full Update)',
+                        'tags'       => ['ApiUserController'],
+                        'summary'    => 'Mezunu tamamen güncelle (Full Update) - ApiUserController::update',
                         'parameters' => [
                             ['name' => 'id', 'in' => 'path', 'required' => true, 'schema' => ['type' => 'integer']]
                         ],
@@ -131,12 +146,13 @@ class ApiController
                             ]
                         ],
                         'responses' => [
-                            '200' => ['description' => 'Kullanıcı güncellendi'],
-                            '404' => ['description' => 'Kullanıcı bulunamadı']
+                            '200' => ['description' => 'Mezun güncellendi'],
+                            '404' => ['description' => 'Mezun bulunamadı']
                         ]
                     ],
                     'patch' => [
-                        'summary'    => 'Kullanıcı alanını kısmen güncelle (Partial Update)',
+                        'tags'       => ['ApiUserController'],
+                        'summary'    => 'Mezun alanını kısmen güncelle (Partial Update) - ApiUserController::patch',
                         'parameters' => [
                             ['name' => 'id', 'in' => 'path', 'required' => true, 'schema' => ['type' => 'integer']]
                         ],
@@ -147,25 +163,28 @@ class ApiController
                                     'schema' => [
                                         'type'       => 'object',
                                         'properties' => [
-                                            'company' => ['type' => 'string', 'example' => 'Yeni Şirket A.Ş.']
+                                            'company'        => ['type' => 'string', 'example' => 'Yeni Şirket A.Ş.'],
+                                            'email'          => ['type' => 'string', 'example' => 'yeni.eposta@alumni.iu.edu.tr'],
+                                            'graduationYear' => ['type' => 'integer', 'example' => 2025]
                                         ]
                                     ]
                                 ]
                             ]
                         ],
                         'responses' => [
-                            '200' => ['description' => 'Kullanıcı güncellendi'],
-                            '404' => ['description' => 'Kullanıcı bulunamadı']
+                            '200' => ['description' => 'Mezun kısmen güncellendi'],
+                            '404' => ['description' => 'Mezun bulunamadı']
                         ]
                     ],
                     'delete' => [
-                        'summary'    => 'Kullanıcıyı sil (Delete)',
+                        'tags'       => ['ApiUserController'],
+                        'summary'    => 'Mezunu sil (Delete) - ApiUserController::destroy',
                         'parameters' => [
                             ['name' => 'id', 'in' => 'path', 'required' => true, 'schema' => ['type' => 'integer']]
                         ],
                         'responses' => [
-                            '200' => ['description' => 'Kullanıcı silindi'],
-                            '404' => ['description' => 'Kullanıcı bulunamadı']
+                            '200' => ['description' => 'Mezun başarıyla silindi'],
+                            '404' => ['description' => 'Mezun bulunamadı']
                         ]
                     ]
                 ]
