@@ -12,7 +12,7 @@ WORKDIR /var/www/html
 # Proje dosyalarını konteynere kopyala
 COPY . /var/www/html/
 
-# Gerekli dosya izinlerini ayarla
-RUN chown -R www-data:www-data /var/www/html
+# Gerekli dosya ve dizin izinlerini ayarla (Veritabanı yazma izinleri)
+RUN mkdir -p /var/www/html/data && chown -R www-data:www-data /var/www/html && chmod -R 775 /var/www/html/data
 
 EXPOSE 80

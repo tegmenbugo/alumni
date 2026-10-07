@@ -14,6 +14,11 @@ config/config.local.php
 *.log
 error_log
 
-# Uploads (Keep the directory structure, ignore actual uploads)
+# Database binaries (Created automatically on run)
+*.sqlite
+*.sqlite3
+*.db
+
+# Uploads
 public/uploads/*
 !public/uploads/.gitkeep

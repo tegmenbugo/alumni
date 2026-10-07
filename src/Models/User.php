@@ -1,168 +1,174 @@
 <?php
 namespace App\Models;
 
+use App\Core\Database;
+use PDO;
+
 /**
  * User Model (MVC - Model Katmanı)
- * Mezun ve kullanıcı verilerinin yönetiminden ve kalıcılığından sorumludur.
+ * Veritabanı (Database) bağlantısı üzerinden kullanıcı ve mezun CRUD işlemlerini yürütür.
  */
 class User
 {
-    private static function getStoragePath(): string
+    private static function getDb(): PDO
     {
-        return dirname(__DIR__, 2) . '/data/users.json';
+        return Database::connect();
     }
 
-    private static function loadAll(): array
-    {
-        $file = self::getStoragePath();
-        if (!file_exists($file)) {
-            return [];
-        }
-        $content = file_get_contents($file);
-        return json_decode($content, true) ?: [];
-    }
-
-    private static function saveAll(array $users): bool
-    {
-        $file = self::getStoragePath();
-        $dir = dirname($file);
-        if (!is_dir($dir)) {
-            mkdir($dir, 0777, true);
-        }
-        return (bool)file_put_contents(
-            $file,
-            json_encode(array_values($users), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
-        );
-    }
-
+    /**
+     * READ ALL (C[R]UD) - Tüm kullanıcıları veritabanından getirir.
+     */
     public static function all(): array
     {
-        return self::loadAll();
+        $db = self::getDb();
+        $stmt = $db->query("SELECT id, name, email, graduationYear, department, company, created_at FROM users ORDER BY id ASC");
+        $results = $stmt->fetchAll();
+
+        // graduationYear sayısal tipe cast edilsin
+        foreach ($results as &$row) {
+            if ($row['graduationYear'] !== null) {
+                $row['graduationYear'] = (int)$row['graduationYear'];
+            }
+            $row['id'] = (int)$row['id'];
+        }
+
+        return $results;
     }
 
+    /**
+     * READ ONE (C[R]UD) - ID'ye göre tek bir kullanıcıyı getirir.
+     */
     public static function find(int $id): ?array
     {
-        $users = self::loadAll();
-        foreach ($users as $user) {
-            if (isset($user['id']) && $user['id'] === $id) {
-                return $user;
-            }
+        $db = self::getDb();
+        $stmt = $db->prepare("SELECT id, name, email, graduationYear, department, company, created_at FROM users WHERE id = :id");
+        $stmt->execute([':id' => $id]);
+        $user = $stmt->fetch();
+
+        if (!$user) {
+            return null;
         }
-        return null;
+
+        $user['id'] = (int)$user['id'];
+        if ($user['graduationYear'] !== null) {
+            $user['graduationYear'] = (int)$user['graduationYear'];
+        }
+
+        return $user;
     }
 
+    /**
+     * CREATE ([C]RUD) - Veritabanına yeni bir kullanıcı ekler.
+     */
     public static function create(array $data): array
     {
-        $users = self::loadAll();
+        $db = self::getDb();
+        $stmt = $db->prepare("
+            INSERT INTO users (name, email, graduationYear, department, company) 
+            VALUES (:name, :email, :graduationYear, :department, :company)
+        ");
 
-        $maxId = 0;
-        foreach ($users as $u) {
-            if (isset($u['id']) && $u['id'] > $maxId) {
-                $maxId = $u['id'];
-            }
-        }
-        $newId = $maxId + 1;
+        $stmt->execute([
+            ':name'           => trim($data['name']),
+            ':email'          => isset($data['email']) ? trim($data['email']) : null,
+            ':graduationYear' => isset($data['graduationYear']) && $data['graduationYear'] !== '' ? (int)$data['graduationYear'] : null,
+            ':department'     => isset($data['department']) ? trim($data['department']) : null,
+            ':company'        => isset($data['company']) ? trim($data['company']) : null
+        ]);
 
-        $newUser = [
-            'id'             => $newId,
-            'name'           => trim($data['name']),
-            'email'          => trim($data['email'] ?? ''),
-            'graduationYear' => isset($data['graduationYear']) ? (int)$data['graduationYear'] : null,
-            'department'     => trim($data['department'] ?? ''),
-            'company'        => trim($data['company'] ?? '')
-        ];
-
-        $users[] = $newUser;
-        self::saveAll($users);
-
-        return $newUser;
+        $newId = (int)$db->lastInsertId();
+        return self::find($newId);
     }
 
+    /**
+     * UPDATE (CR[U]D) - Kullanıcı bilgilerini tamamen günceller (Full Update).
+     */
     public static function update(int $id, array $data): ?array
     {
-        $users = self::loadAll();
-        $targetIndex = -1;
-
-        foreach ($users as $index => $u) {
-            if (isset($u['id']) && $u['id'] === $id) {
-                $targetIndex = $index;
-                break;
-            }
-        }
-
-        if ($targetIndex === -1) {
+        $existing = self::find($id);
+        if (!$existing) {
             return null;
         }
 
-        $users[$targetIndex] = [
-            'id'             => $id,
-            'name'           => trim($data['name']),
-            'email'          => trim($data['email'] ?? ''),
-            'graduationYear' => isset($data['graduationYear']) ? (int)$data['graduationYear'] : null,
-            'department'     => trim($data['department'] ?? ''),
-            'company'        => trim($data['company'] ?? '')
-        ];
+        $db = self::getDb();
+        $stmt = $db->prepare("
+            UPDATE users 
+            SET name = :name, email = :email, graduationYear = :graduationYear, department = :department, company = :company 
+            WHERE id = :id
+        ");
 
-        self::saveAll($users);
-        return $users[$targetIndex];
+        $stmt->execute([
+            ':id'             => $id,
+            ':name'           => trim($data['name']),
+            ':email'          => isset($data['email']) ? trim($data['email']) : null,
+            ':graduationYear' => isset($data['graduationYear']) && $data['graduationYear'] !== '' ? (int)$data['graduationYear'] : null,
+            ':department'     => isset($data['department']) ? trim($data['department']) : null,
+            ':company'        => isset($data['company']) ? trim($data['company']) : null
+        ]);
+
+        return self::find($id);
     }
 
+    /**
+     * PATCH (CR[U]D) - Kullanıcının sadece belirtilen alanlarını günceller (Partial Update).
+     */
     public static function patch(int $id, array $data): ?array
     {
-        $users = self::loadAll();
-        $targetIndex = -1;
-
-        foreach ($users as $index => $u) {
-            if (isset($u['id']) && $u['id'] === $id) {
-                $targetIndex = $index;
-                break;
-            }
-        }
-
-        if ($targetIndex === -1) {
+        $existing = self::find($id);
+        if (!$existing) {
             return null;
         }
 
-        if (isset($data['name'])) {
-            $users[$targetIndex]['name'] = trim($data['name']);
+        $fields = [];
+        $params = [':id' => $id];
+
+        if (array_key_exists('name', $data)) {
+            $fields[] = "name = :name";
+            $params[':name'] = trim($data['name']);
         }
-        if (isset($data['email'])) {
-            $users[$targetIndex]['email'] = trim($data['email']);
+        if (array_key_exists('email', $data)) {
+            $fields[] = "email = :email";
+            $params[':email'] = trim($data['email']);
         }
-        if (isset($data['graduationYear'])) {
-            $users[$targetIndex]['graduationYear'] = (int)$data['graduationYear'];
+        if (array_key_exists('graduationYear', $data)) {
+            $fields[] = "graduationYear = :graduationYear";
+            $params[':graduationYear'] = $data['graduationYear'] !== null ? (int)$data['graduationYear'] : null;
         }
-        if (isset($data['department'])) {
-            $users[$targetIndex]['department'] = trim($data['department']);
+        if (array_key_exists('department', $data)) {
+            $fields[] = "department = :department";
+            $params[':department'] = trim($data['department']);
         }
-        if (isset($data['company'])) {
-            $users[$targetIndex]['company'] = trim($data['company']);
+        if (array_key_exists('company', $data)) {
+            $fields[] = "company = :company";
+            $params[':company'] = trim($data['company']);
         }
 
-        self::saveAll($users);
-        return $users[$targetIndex];
+        if (empty($fields)) {
+            return $existing;
+        }
+
+        $db = self::getDb();
+        $sql = "UPDATE users SET " . implode(', ', $fields) . " WHERE id = :id";
+        $stmt = $db->prepare($sql);
+        $stmt->execute($params);
+
+        return self::find($id);
     }
 
+    /**
+     * DELETE (CRU[D]) - ID'ye sahip kullanıcıyı veritabanından siler.
+     */
     public static function delete(int $id): ?array
     {
-        $users = self::loadAll();
-        $targetIndex = -1;
-
-        foreach ($users as $index => $u) {
-            if (isset($u['id']) && $u['id'] === $id) {
-                $targetIndex = $index;
-                break;
-            }
-        }
-
-        if ($targetIndex === -1) {
+        $existing = self::find($id);
+        if (!$existing) {
             return null;
         }
 
-        $deletedUser = $users[$targetIndex];
-        array_splice($users, $targetIndex, 1);
-        self::saveAll($users);
+        $db = self::getDb();
+        $stmt = $db->prepare("DELETE FROM users WHERE id = :id");
+        $stmt->execute([':id' => $id]);
 
-        return $deletedUser;
+        return $existing;
     }
 }

@@ -65,10 +65,12 @@ sequenceDiagram
 ```text
 alumni/
 ├── data/                               # [VERİ KATMANI]
-│   └── users.json                      # Veritabanı öncesi aşamada kalıcı JSON veri deposu
+│   ├── alumni.sqlite                   # PDO SQLite veritabanı dosyası (Otomatik şema & seed)
+│   └── users.json                      # Yedek/başlangıç JSON veri deposu
 │
 ├── src/                                # [UYGULAMA ÇEKİRDEĞİ & İŞ MANTIĞI]
 │   ├── Core/                           # Çekirdek MVC Altyapı Sınıfları
+│   │   ├── Database.php                # PDO veritabanı bağlantı yöneticisi (Singleton)
 │   │   ├── Router.php                  # Dinamik regex rota çözümleyici ve metod dağıtıcı
 │   │   ├── Response.php                # Standart JSON, Text ve Redirect HTTP yanıt üreticisi
 │   │   └── View.php                    # views/ dizinindeki HTML şablonlarını veriyle birleştiren renderer
@@ -101,7 +103,7 @@ alumni/
 | Katman | Konum | Sorumluluk ve Görev Tanımı |
 | :--- | :--- | :--- |
 | **Front Controller** | `index.php` | Sistemin tek kapısıdır. PSR-4 standartlarında otomatik yükleyiciyi (Autoloader) başlatır, CORS ayarlarını yapar, rotaları tanımlar ve isteği `Router`'a iletir. |
-| **Model (M)** | `src/Models/User.php` | Veri kaynağıyla (`data/users.json`) konuşan yegane katmandır. Veri ekleme, arama, filtreleme, güncelleme ve silme iş kurallarını kapsüller. Controller verinin nerede ve nasıl saklandığını bilmez. |
+| **Model (M)** | `src/Models/User.php` | Veritabanı (Database) bağlantısını PDO (`Core\Database`) üzerinden kurar. SQL Prepared Statements kullanarak tüm CRUD (Create, Read, Update, Delete) operasyonlarını yürütür. Controller veritabanının yapısını bilmez; tüm sorgular Model içinde kapsüllenir. |
 | **View (V)** | `views/*.php` | Kullanıcının gördüğü sunum katmanıdır. `Core\View` sınıfı üzerinden çağrılır. Controller'dan aktarılan verileri modern HTML5 ve Bootstrap 5 bileşenleriyle görselleştirir. |
 | **Controller (C)** | `src/Controllers/*.php` | Model ile View arasındaki köprüdür. HTTP isteklerini yakalar, girdi doğrulamalarını (validation) yapar, ilgili Model metodunu tetikler ve sonucu `Response::json()` veya `View::render()` ile istemciye döndürür. |
 | **Core Engine** | `src/Core/*` | MVC omurgasını oluşturan `Router`, `Response` ve `View` motorudur. Harici kütüphane bağımlılığı olmaksızın RESTful rotaları ve HTTP durum kodlarını yönetir. |
