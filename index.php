@@ -48,9 +48,10 @@ $router->get('/sum/{a}/{b}',      [HomeController::class, 'sum']);
 $router->get('/about',            [HomeController::class, 'about']);
 
 // -------------------------------------------------------------
-// SİSTEM & DOKÜMANTASYON ROTALARI (Week 03)
+// SİSTEM, DOKÜMANTASYON & MİGRASYON ROTALARI (Week 03 & Week 05)
 // -------------------------------------------------------------
 $router->get('/api/health',       [ApiController::class, 'health']);
+$router->get('/api/migrations',   [ApiController::class, 'migrations']);
 $router->get('/api/swagger',      [ApiController::class, 'swagger']);
 $router->get('/swagger',          [ApiController::class, 'swaggerRedirect']);
 $router->get('/api/openapi.json', [ApiController::class, 'openapi']);

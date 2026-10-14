@@ -14,6 +14,13 @@ config/config.local.php
 *.log
 error_log
 
+# Environment Variables & Secrets (Hassas Veriler Asla Git'e Yüklenmez)
+.env
+.env.local
+.env.*.local
+!.example.env
+!.env.example
+
 # Database binaries (Created automatically on run)
 *.sqlite
 *.sqlite3

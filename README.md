@@ -64,41 +64,55 @@ sequenceDiagram
 
 ```text
 alumni/
-├── data/                               # [VERİ KATMANI]
-│   ├── alumni.sqlite                   # PDO SQLite veritabanı dosyası (Otomatik şema & seed)
-│   └── users.json                      # Yedek/başlangıç JSON veri deposu
+├── database/                           # [VERİTABANI MİGRASYONLARI - Görev 5]
+│   └── migrations/                     # ddd.md şemasına göre SQL migrasyon betikleri
+│       ├── 001_create_users_table.sql
+│       ├── 002_create_profiles_table.sql
+│       ├── 003_create_education_history_table.sql
+│       ├── 004_create_work_experiences_table.sql
+│       ├── 005_create_skills_tables.sql
+│       ├── 006_create_job_postings_tables.sql
+│       └── 007_seed_initial_data.sql
+│
+├── data/                               # [KALICI VERİ DEPOSU (Volume)]
+│   ├── alumni.sqlite                   # SQLite veritabanı dosyası
+│   └── users.json                      # JSON başlangıç veri deposu
 │
 ├── src/                                # [UYGULAMA ÇEKİRDEĞİ & İŞ MANTIĞI]
-│   ├── Core/                           # Çekirdek MVC Altyapı Sınıfları
-│   │   ├── Database.php                # PDO veritabanı bağlantı yöneticisi (Singleton)
-│   │   ├── Router.php                  # Dinamik regex rota çözümleyici ve metod dağıtıcı
-│   │   ├── Response.php                # Standart JSON, Text ve Redirect HTTP yanıt üreticisi
-│   │   └── View.php                    # views/ dizinindeki HTML şablonlarını veriyle birleştiren renderer
+│   ├── Core/                           # Çekirdek Altyapı Sınıfları
+│   │   ├── Database.php                # PDO bağlantı yöneticisi (SQLite & MySQL)
+│   │   ├── Env.php                     # .env ortam değişkenleri ayrıştırıcı (Görev 4)
+│   │   ├── Migration.php               # ddd.md migrasyon koşucu (Görev 5)
+│   │   ├── Router.php                  # Dinamik regex rota çözümleyici
+│   │   ├── Response.php                # JSON, Text ve Redirect HTTP yanıt üreticisi
+│   │   └── View.php                    # HTML şablon renderer
 │   │
-│   ├── Models/                         # [MODEL KATMANI (M) - Görev 2]
-│   │   └── User.php                    # PDO Database bağlantılı model; CRUD fonksiyonları (all, find, create, update, patch, delete)
+│   ├── Models/                         # [MODEL KATMANI (M)]
+│   │   └── User.php                    # Database bağlantılı model (CRUD fonksiyonları)
 │   │
-│   └── Controllers/                    # [CONTROLLER KATMANI (C) - Görev 3]
-│       ├── UserController.php          # [Web Controller] HTML arayüzü ve form CRUD işlemleri (/users)
-│       ├── ApiUserController.php       # [REST API Controller] JSON tabanlı CRUD uç noktaları (/api/users)
+│   └── Controllers/                    # [CONTROLLER KATMANI (C)]
+│       ├── UserController.php          # [Web Controller] HTML arayüz CRUD işlemleri (/users)
+│       ├── ApiUserController.php       # [REST API Controller] JSON CRUD uç noktaları (/api/users)
 │       ├── HomeController.php          # Web sayfaları (/, /hello, /sum, /about, /Alumni)
-│       └── ApiController.php           # Sistem sağlığı (/api/health) ve Swagger/OpenAPI yönetimi
+│       └── ApiController.php           # Sistem sağlığı (/api/health), Migrasyonlar (/api/migrations) ve Swagger
 │
 ├── views/                              # [VIEW KATMANI (V)]
 │   ├── home.php                        # Ana kontrol paneli ve uç nokta test arayüzü
 │   ├── about.php                       # Proje hakkında sayfası
 │   ├── swagger.php                     # Swagger UI canlı dokümantasyon sayfası
-│   └── users/                          # Mezun web arayüz şablonları
-│       ├── index.php                   # Mezun listesi tablosu & yeni mezun ekleme modalı
-│       └── show.php                    # Tekil mezun detay profil kartı
+│   └── users/                          # Mezun web arayüz şablonları (index, show, edit)
 │
-├── Dockerfile                          # Konteyner ortam tanımı (PHP 8.3 + Apache + mod_rewrite)
-├── docker-compose.yml                  # Tek komutla ayağa kaldırma orkestrasyonu
-├── index.php                           # [FRONT CONTROLLER] Tüm istekleri karşılayan tek giriş noktası
-├── .htaccess                           # Apache URL rewrite motoru (Tüm trafiği index.php'ye yönlendirir)
-├── .gitignore                          # Sürüm kontrolü dışı dosyalar
-├── ddd.md                              # [DATA DESIGN] Kapsamlı veri sözlüğü, ERD ve şema sözleşmesi
-└── README.md                           # Proje mimarisi, sözleşmesi ve dokümantasyonu
+├── .example.env                        # [ORTAM ŞABLONU - Görev 4] Şifresiz güvenli env şablonu (Git'e yüklenir)
+├── .env.example                        # [ALTERNATİF ŞABLON] Standart env şablon kopyası
+├── .env                                # [YEREL ORTAM] Hassas veriler (Git'te İGNORLANIR)
+├── migrate.php                         # [MİGRASYON CLI - Görev 5] php migrate.php komut satırı arayüzü
+├── ddd.md                              # [DATA DESIGN - Hafta 05] Kapsamlı veri sözlüğü ve ERD şeması
+├── Dockerfile                          # Konteyner tanımı (PHP 8.3 + Apache + pdo_mysql)
+├── docker-compose.yml                  # [GÖREV 3] Web + MySQL servisleri ve persistent volume
+├── index.php                           # [FRONT CONTROLLER] Tek giriş kapısı
+├── .htaccess                           # Apache URL rewrite motoru
+├── .gitignore                          # Sürüm kontrolü dışı dosyalar (.env korumalı)
+└── README.md                           # Proje mimarisi ve dokümantasyonu
 ```
 
 ---
@@ -171,21 +185,50 @@ Sistemde iki ayrı Controller üzerinden hem son kullanıcılar için HTML taban
 
 ---
 
-## 🗄️ Veri Mimarisi ve Tasarım Dokümantasyonu (Data Design - ddd.md)
+## 🗄️ Veri Mimarisi, Ortam Değişkenleri ve Migrasyonlar (Hafta 05)
 
 Projenin kapsamlı etki alanı (domain) analizi, varlık-ilişki diyagramı (ERD), veri sözlüğü, SQL DDL şeması ve sentetik tohum veri kümesi bağımsız bir mimari sözleşme olarak **`ddd.md`** dosyasında belgelenmiştir:
 
 👉 **[Kapsamlı Veri Tasarım Dokümanı (ddd.md)](./ddd.md)**
 
-### 🛡️ "The Forgetting Test" (Unutma Testi) ve Konteyner Veri Kalıcılığı
-Docker mimarisinde konteynerlar kapatılıp yok edildiğinde (`docker compose down`) geçici katmandaki veriler silinir. Bu durumun önüne geçmek ve veritabanı sürekliliğini garanti altına almak için sistemde **Host Bind Mount** mimarisi uygulanmıştır:
+### 1. Ortam Değişkenleri İlkesi (.env vs .example.env - Görev 4)
+* **Altın Kural:** Şifreler, veritabanı parolaları ve gizli anahtarlar **asla** Git'e yüklenmez. `.env` dosyası `.gitignore` ile korunmaktadır.
+* **Şablon (.example.env / .env.example):** Projeyi klonlayan geliştiricilerin hangi değişkenlere ihtiyaç duyduğunu görebilmesi için parolasız ve zararsız örnek değerler içeren `.example.env` dosyası repoda tutulur:
+  ```bash
+  # Projeyi ayağa kaldırmadan önce şablonu kopyalayınız:
+  cp .example.env .env
+  ```
 
-* **Bağlantı (Volume Mount):** `./data:/var/www/html/data`
+### 2. Veritabanı ve Docker Compose Mimarisi (Görev 3)
+[docker-compose.yml](./docker-compose.yml) dosyası veritabanı gereksinimlerine göre güncellenmiştir:
+* **`web` Servisi:** PHP 8.3 + Apache + `pdo_mysql` + `pdo_sqlite` sürücüleri.
+* **`db` Servisi:** MySQL 8.0 veritabanı sunucusu.
+* **Kalıcı Veri Hacmi (`db_data` Volume):** MySQL verileri `db_data:/var/lib/mysql` üzerinde saklanır.
+* **SQLite Uyumluluğu:** SQLite verileri `./data:/var/www/html/data` üzerinde tutulur.
+
+### 3. ddd.md Şemasına Göre Veritabanı Üretimi ve Migrasyon (Görev 5)
+Sistem, `ddd.md` dokümanındaki 8 tabloyu ve sentetik tohum verilerini otomatik olarak oluşturabilen migrasyon altyapısına sahiptir:
+* **Migrasyon Dosyaları:** `database/migrations/*.sql`
+* **Komut Satırı (CLI) Migrasyon Çalıştırıcı:**
+  ```bash
+  # Tüm bekleyen migrasyonları uygular:
+  php migrate.php
+
+  # Migrasyon durumunu listeler:
+  php migrate.php --status
+  ```
+* **Canlı API Uç Noktası:** `GET /api/migrations` (Tüm tabloların ve migrasyonların durumunu JSON olarak döner).
+
+### 🛡️ "The Forgetting Test" (Unutma Testi) ve Konteyner Veri Kalıcılığı
+Docker mimarisinde konteynerlar kapatılıp yok edildiğinde (`docker compose down`) geçici katmandaki veriler silinir. Bu durumun önüne geçmek ve veritabanı sürekliliğini garanti altına almak için sistemde **Host Bind Mount** ve **Named Volume** mimarisi uygulanmıştır:
+
+* **SQLite Bağlantısı:** `./data:/var/www/html/data`
+* **MySQL Bağlantısı:** `db_data:/var/lib/mysql`
 * **Test Protokolü:**
   1. `docker compose up -d` ile sistem ayağa kaldırılır.
   2. Web arayüzü (`/users`) veya REST API (`POST /api/users`) üzerinden yeni bir mezun kaydı eklenir.
   3. `docker compose down` komutuyla konteyner tamamen kapatılır ve yok edilir.
-  4. `docker compose up -d` ile konteyner yeniden başlatıldığında, eklenen kaydın `data/alumni.sqlite` dosyası üzerinden **korunduğu ve asla unutulmadığı** doğrulanır.
+  4. `docker compose up -d` ile konteyner yeniden başlatıldığında, eklenen kaydın `data/alumni.sqlite` veya `db_data` üzerinde **korunduğu ve asla unutulmadığı** doğrulanır.
 * Detaylı analiz, ERD ve şema tanımları için bkz: **[ddd.md — Bölüm 7 (Veri Kalıcılığı Analizi)](./ddd.md#-7-veri-kalıcılığı-ve-the-forgetting-test-analizi)**.
 
 ---
@@ -196,7 +239,7 @@ Docker mimarisinde konteynerlar kapatılıp yok edildiğinde (`docker compose do
 * [x] **Week 02:** Routing — the doors of the system (GET endpoints: `/Alumni`, `/hello`, `/hello/{name}`, `/sum/{n1}/{n2}`, `/about`, `/`).
 * [x] **Week 03:** HTTP methods & CRUD on `/api/users` (GET, POST, PUT, PATCH, DELETE) + Swagger UI at `/api/swagger`.
 * [x] **Week 04:** MVC architecture (Decoupled Front Controller, Router, Controllers [UserController & ApiUserController], Models [PDO User], Views, and synchronized Swagger UI).
-* [x] **Week 05:** Database & ORM — Data Design Documentation (`ddd.md`), ERD modeling, SQLite PDO persistence, and passing "The Forgetting Test" with Docker volumes.
+* [x] **Week 05:** Database & ORM — Data Design Documentation (`ddd.md`), Docker Compose Database Service (`db`), Environment Variables (`.env` vs `.example.env`), Migration Engine (`migrate.php`), and passing "The Forgetting Test".
 * [ ] **Week 06:** Database integration & multi-table relationships.
 * [ ] **Week 07:** Relational data & advanced routing.
 * [ ] **Week 08:** Midterm — code review.

@@ -1,7 +1,7 @@
 FROM php:8.3-apache
 
-# Apache mod_rewrite modülünü aktif et (Yönlendirmeler ve .htaccess için zorunlu)
-RUN a2enmod rewrite
+# Apache mod_rewrite modülünü aktif et ve MySQL PDO sürücüsünü kur
+RUN a2enmod rewrite && docker-php-ext-install pdo pdo_mysql
 
 # .htaccess dosyalarının okunabilmesi için AllowOverride All ayarını yap
 RUN sed -i 's/AllowOverride None/AllowOverride All/g' /etc/apache2/apache2.conf

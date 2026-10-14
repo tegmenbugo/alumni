@@ -40,6 +40,34 @@ class ApiController
     }
 
     /**
+     * GET /api/migrations - ddd.md Veritabanı Migrasyon Durumu (Görev 5)
+     */
+    public function migrations(): void
+    {
+        try {
+            $pdo = \App\Core\Database::connect();
+            $driver = $pdo->getAttribute(\PDO::ATTR_DRIVER_NAME);
+            $statusList = \App\Core\Migration::getStatus($pdo);
+
+            if ($driver === 'sqlite') {
+                $tables = $pdo->query("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'")->fetchAll(\PDO::FETCH_COLUMN);
+            } else {
+                $tables = $pdo->query("SHOW TABLES")->fetchAll(\PDO::FETCH_COLUMN);
+            }
+
+            Response::json([
+                'status'     => 'success',
+                'driver'     => $driver,
+                'tables'     => $tables,
+                'migrations' => $statusList,
+                'schemaDoc'  => 'ddd.md'
+            ], 200);
+        } catch (\Exception $e) {
+            Response::json(['error' => 'Migrasyon bilgisi alınamadı: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
      * GET /api/openapi.json - OpenAPI 3.0 Şeması
      */
     public function openapi(): void
@@ -71,6 +99,15 @@ class ApiController
                         'summary'   => 'Sistem sağlık kontrolü (ApiController::health)',
                         'responses' => [
                             '200' => ['description' => 'Sistem çalışıyor']
+                        ]
+                    ]
+                ],
+                '/api/migrations' => [
+                    'get' => [
+                        'tags'      => ['System'],
+                        'summary'   => 'ddd.md Veritabanı Migrasyon ve Tablo Durumu (ApiController::migrations)',
+                        'responses' => [
+                            '200' => ['description' => 'Migrasyon durumu ve ddd.md tabloları listesi']
                         ]
                     ]
                 ],

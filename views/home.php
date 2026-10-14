@@ -89,6 +89,13 @@
                                 <tr>
                                     <td><span class="badge bg-primary">API</span></td>
                                     <td><span class="badge bg-success">GET</span></td>
+                                    <td><span class="endpoint-badge">/api/migrations</span></td>
+                                    <td><code>ApiController::migrations()</code> (ddd.md Şeması)</td>
+                                    <td class="text-center"><a href="/api/migrations" class="btn btn-sm btn-outline-primary" target="_blank">Aç ↗</a></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="badge bg-primary">API</span></td>
+                                    <td><span class="badge bg-success">GET</span></td>
                                     <td><span class="endpoint-badge">/api/users</span></td>
                                     <td><code>ApiUserController::index()</code> (JSON)</td>
                                     <td class="text-center"><a href="/api/users" class="btn btn-sm btn-outline-primary" target="_blank">Aç ↗</a></td>

@@ -531,10 +531,36 @@ Sistemin veriyi unutmadığını test etmek için aşağıdaki 4 adım izlenir:
 
 ---
 
-## 🗺️ 9. Gelecek Haftaların Veritabanı Yol Haritası
+## ⚙️ 10. Otomatik Migrasyon Motoru ve CLI Koşucu (Migration Engine)
+
+`ddd.md` içerisinde tasarlanan tüm varlıklar ve sentetik tohum verileri, `database/migrations/` dizini altındaki bağımsız SQL migrasyon dosyaları ile kod tabanına dönüştürülmüştür:
+
+| Dosya | Açıklama | Hedef Tablo(lar) |
+| :--- | :--- | :--- |
+| `001_create_users_table.sql` | Çekirdek mezun ve kullanıcı şeması | `users` |
+| `002_create_profiles_table.sql` | Genişletilmiş profil ve sosyal bağlantılar (1:1) | `profiles` |
+| `003_create_education_history_table.sql` | Akademik geçmiş ve dereceler (1:N) | `education_history` |
+| `004_create_work_experiences_table.sql` | Profesyonel kariyer ve iş deneyimleri (1:N) | `work_experiences` |
+| `005_create_skills_tables.sql` | Yetenek kataloğu ve eşleşmeler (N:M) | `skills`, `user_skills` |
+| `006_create_job_postings_tables.sql` | İş/staj ilanları ve başvurular | `job_postings`, `job_applications` |
+| `007_seed_initial_data.sql` | İÜ YBS mezunları ve sentetik tohum verisi | Tüm tablolar |
+
+### CLI ve API Üzerinden Çalıştırma:
+```bash
+# Komut satırından tüm migrasyonları uygulamak için:
+php migrate.php
+
+# Migrasyon durum tablosunu listelemek için:
+php migrate.php --status
+```
+* **Canlı API:** `GET /api/migrations` uç noktası üzerinden sistemdeki tüm tablolar ve migrasyon geçmişi görüntülenebilir.
+
+---
+
+## 🗺️ 11. Gelecek Haftaların Veritabanı Yol Haritası
 
 * [x] **Hafta 03:** REST API CRUD uç noktaları ve Swagger UI.
 * [x] **Hafta 04:** Saf PHP Nesne Yönelimli MVC ayrımı (`UserController` vs `ApiUserController`).
-* [x] **Hafta 05:** Veri Tasarım Dokümantasyonu (`ddd.md`), PDO SQLite modeli ve "The Forgetting Test" konteyner kalıcılığı.
+* [x] **Hafta 05:** Veri Tasarım Dokümantasyonu (`ddd.md`), Docker Compose Veritabanı (`db`), Ortam Değişkenleri (`.env` vs `.example.env`), Migrasyon Motoru (`migrate.php`) ve "The Forgetting Test" konteyner kalıcılığı.
 * [ ] **Hafta 06:** Çoklu tablo ilişkileri (`profiles`, `education_history`, `work_experiences`) ve veritabanı migrasyonları.
 * [ ] **Hafta 07:** İleri düzey ilişkisel sorgular, filtreleme ve sayfalama (Pagination).
