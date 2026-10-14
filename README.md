@@ -16,13 +16,39 @@ Bu sistem, üniversite mezunları ile mevcut öğrenciler ve yönetim arasındak
 Dersin temel kuralı uyarınca sistem tek bir komutla ayağa kalkmaktadır:
 
 ```bash
-docker compose up
+# 1. Ortam şablonunu kopyala
+cp .example.env .env
+
+# 2. Tek komutla ayağa kaldır (Web + Veritabanı)
+docker compose up -d
+
+# 3. İsteğe bağlı: Tohum verileri ve UserFactory çalıştır
+php seed.php
 ```
 
 Komut çalıştıktan sonra tarayıcınızdan şu adrese gidebilirsiniz:
 👉 **`http://localhost:8000`** *(veya `http://localhost`)*
 
 *(Alternatif olarak yerel PHP ortamında çalıştırmak için: `php -S localhost:8000 index.php`)*
+
+---
+
+## 🛡️ Asla Aşılmayacak Mimari ve Veri Kuralları (System Invariants)
+
+Doç. Dr. Emre Akadal'ın ders standartları gereğince bu projede **asla taviz verilmeyecek 6 altın kural**:
+
+1. **`ddd.md` Canlı Veri Sözleşmesi (Living Documentation & Self-Updating Rule):**  
+   Sistemdeki herhangi bir varlık, tablo, sütun, ilişki, model veya migrasyon değiştiğinde; [ddd.md](./ddd.md) (Data Design Documentation) dosyası **derhal ve eksiksiz olarak güncellenir**. `ddd.md` veritabanının yegane doğruluk kaynağıdır (Single Source of Truth). Dokümantasyonu güncellenmemiş hiçbir kod değişikliği tamamlanmış sayılamaz.
+2. **Hassas Veri ve Gizlilik Yasağı (.env vs .example.env):**  
+   Hiçbir veritabanı parolası, gizli anahtar veya API tokenı GitHub'a yüklenemez. `.env` dosyası daima `.gitignore` altındadır. Repoda yalnızca şifresiz ve zararsız şablon olan `.example.env` yer alır.
+3. **Konteyner Veri Kalıcılığı ("The Forgetting Test"):**  
+   Docker konteynerleri geçicidir (ephemeral). Ancak veritabanı asla unutamaz; host volume mount (`./data:/var/www/html/data` veya `db_data`) kullanılarak `docker compose down` ve `docker compose up` döngülerinde verilerin %100 kalıcı olması zorunludur.
+4. **SQL Enjeksiyonuna Karşı Sıfır Tolerans (Prepared Statements):**  
+   Modellerde ve denetleyicilerde dinamik metin birleştirme ile SQL yazılması (`"SELECT ... " . $input`) kesinlikle yasaktır. İstisnasız tüm sorgular PDO Prepared Statements üzerinden parametrik olarak yürütülür.
+5. **Tek Komutla Çalışma Prensibi (One-Command Execution):**  
+   Sistem, karmaşık kurulum adımları olmaksızın `docker compose up` ile tek komutta ayağa kalkmalıdır.
+6. **Sürekli API & Swagger Senkronizasyonu:**  
+   Eklenen veya değiştirilen her API rotası eş zamanlı olarak OpenAPI şemasında (`/api/openapi.json`) ve Swagger UI (`/api/swagger`) üzerinde güncel tutulmalıdır.
 
 ---
 

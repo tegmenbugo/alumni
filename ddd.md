@@ -557,10 +557,34 @@ php migrate.php --status
 
 ---
 
-## 🗺️ 11. Gelecek Haftaların Veritabanı Yol Haritası
+## 🏭 11. UserFactory ve DatabaseSeeder Altyapısı (Görev 6)
+
+Sistemin ilk açılışta zengin ve dinamik mezun verileriyle dolup taşması için iki katmanlı veri üretim mimarisi kurulmuştur:
+
+1. **`UserFactory` (`database/factories/UserFactory.php`):**
+   - Gerçekçi Türkçe isimler, İÜ YBS/İktisat/İşletme bölümleri ve kurumsal teknoloji/finans şirketlerini (Trendyol, Getir, QNB Finansbank, Google, AWS, vb.) kullanarak dinamik kayıtlar üretir.
+   - `UserFactory::createMany(15)` metodu tek seferde 15 benzersiz mezun nesnesi türetir ve veritabanına ekler.
+2. **`DatabaseSeeder` (`database/seeders/DatabaseSeeder.php`):**
+   - Çekirdek mezunları (Elif Kaya, Mert Aydın, Battal Buğra Karataş vb.) ve `UserFactory` üzerinden ek 15 dinamik mezunu tohumlayarak toplam mezun sayısını 20+'ye çıkarır.
+   - İlgili mezunlar için profil ve yetenek eşleşmelerini otomatik oluşturur.
+   - `php seed.php` komutuyla veya sistem ilk çalıştığında otomatik olarak tetiklenir.
+
+---
+
+## 🔄 12. ddd.md Kendi Kendini Güncelleme Protokolü (Living Documentation Policy - Görev 8)
+
+> **Mimari Kural ve Sistem Sözleşmesi (Inviolable Rule):**  
+> Bu doküman (`ddd.md`), statik bir taslak değil; yaşayan bir veri sözleşmesidir.  
+> 1. Kod tabanında (Model, Migration, Controller, Seeder) veritabanı şeması veya veri yapısıyla ilgili herhangi bir değişiklik yapıldığında, **`ddd.md` dosyası derhal ve otomatik olarak kendini günceller.**  
+> 2. `ddd.md` üzerindeki ER diyagramı, veri sözlüğü ve DDL şeması güncellenmeden hiçbir geliştirme tamamlanmış sayılamaz.  
+> 3. Bu doküman projenin Tek Doğruluk Kaynağıdır (Single Source of Truth - SSOT).
+
+---
+
+## 🗺️ 13. Gelecek Haftaların Veritabanı Yol Haritası
 
 * [x] **Hafta 03:** REST API CRUD uç noktaları ve Swagger UI.
 * [x] **Hafta 04:** Saf PHP Nesne Yönelimli MVC ayrımı (`UserController` vs `ApiUserController`).
-* [x] **Hafta 05:** Veri Tasarım Dokümantasyonu (`ddd.md`), Docker Compose Veritabanı (`db`), Ortam Değişkenleri (`.env` vs `.example.env`), Migrasyon Motoru (`migrate.php`) ve "The Forgetting Test" konteyner kalıcılığı.
+* [x] **Hafta 05:** Veri Tasarım Dokümantasyonu (`ddd.md`), Docker Compose Veritabanı (`db`), Ortam Değişkenleri (`.env` vs `.example.env`), Migrasyon Motoru (`migrate.php`), UserFactory & Seeder (`seed.php`), Asla Aşılmayacak Kurallar (`README.md`) ve "The Forgetting Test" kalıcılığı.
 * [ ] **Hafta 06:** Çoklu tablo ilişkileri (`profiles`, `education_history`, `work_experiences`) ve veritabanı migrasyonları.
 * [ ] **Hafta 07:** İleri düzey ilişkisel sorgular, filtreleme ve sayfalama (Pagination).

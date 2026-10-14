@@ -28,8 +28,15 @@ class UserController
      */
     public function index(): void
     {
-        $users = User::all();
-        View::render('users/index', ['users' => $users]);
+        $search = trim($_GET['q'] ?? '');
+        $users = !empty($search) ? User::search($search) : User::all();
+        $totalCount = User::count();
+
+        View::render('users/index', [
+            'users'      => $users,
+            'totalCount' => $totalCount,
+            'search'     => $search
+        ]);
     }
 
     // -------------------------------------------------------------------------

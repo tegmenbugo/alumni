@@ -92,6 +92,34 @@
                         </form>
                     </div>
 
+                    <!-- Arama ve Veritabanı Durum Çubuğu (Görev 7) -->
+                    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2 p-3 bg-light rounded-3 border">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 rounded-pill">
+                                💾 PDO Veritabanı Bağlantısı Aktif
+                            </span>
+                            <span class="badge bg-primary px-3 py-2 rounded-pill">
+                                🎓 Toplam: <?= htmlspecialchars((string)($totalCount ?? count($users))) ?> Mezun
+                            </span>
+                            <?php if (!empty($search)): ?>
+                                <span class="badge bg-warning text-dark px-3 py-2 rounded-pill">
+                                    Filtre: "<?= htmlspecialchars($search) ?>" (<?= count($users) ?> sonuç)
+                                </span>
+                            <?php endif; ?>
+                        </div>
+
+                        <!-- Canlı Arama Formu -->
+                        <form action="/users" method="GET" class="d-flex gap-2" style="max-width: 380px;">
+                            <input type="text" name="q" class="form-control form-control-sm" 
+                                   placeholder="İsim, şirket veya bölüm ara..." 
+                                   value="<?= htmlspecialchars($search ?? '') ?>">
+                            <button type="submit" class="btn btn-sm btn-primary">🔍 Ara</button>
+                            <?php if (!empty($search)): ?>
+                                <a href="/users" class="btn btn-sm btn-outline-secondary">Temizle</a>
+                            <?php endif; ?>
+                        </form>
+                    </div>
+
                     <!-- User Table -->
                     <div class="table-responsive">
                         <table class="table table-hover align-middle border">

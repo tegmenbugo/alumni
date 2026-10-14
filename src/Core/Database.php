@@ -29,8 +29,11 @@ class Database
             // ddd.md şemasına göre tüm tabloları ve sentetik verileri migrasyonla üret
             try {
                 Migration::run(self::$instance);
+                if (class_exists(\Database\Seeders\DatabaseSeeder::class)) {
+                    \Database\Seeders\DatabaseSeeder::run(self::$instance);
+                }
             } catch (\Exception $e) {
-                error_log("Otomatik migrasyon uyarısı: " . $e->getMessage());
+                error_log("Otomatik migrasyon/seeder uyarısı: " . $e->getMessage());
             }
         }
 

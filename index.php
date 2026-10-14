@@ -7,19 +7,19 @@
 
 // 1. PSR-4 Benzeri Otomatik Yükleyici (Autoloader)
 spl_autoload_register(function ($class) {
-    $prefix = 'App\\';
-    $baseDir = __DIR__ . '/src/';
-
-    $len = strlen($prefix);
-    if (strncmp($prefix, $class, $len) !== 0) {
-        return;
+    if (str_starts_with($class, 'App\\')) {
+        $file = __DIR__ . '/src/' . str_replace('\\', '/', substr($class, 4)) . '.php';
+        if (file_exists($file)) {
+            require $file;
+            return;
+        }
     }
-
-    $relativeClass = substr($class, $len);
-    $file = $baseDir . str_replace('\\', '/', $relativeClass) . '.php';
-
-    if (file_exists($file)) {
-        require $file;
+    if (str_starts_with($class, 'Database\\')) {
+        $file = __DIR__ . '/database/' . str_replace('\\', '/', substr($class, 9)) . '.php';
+        if (file_exists($file)) {
+            require $file;
+            return;
+        }
     }
 });
 

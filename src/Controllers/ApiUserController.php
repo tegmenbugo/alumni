@@ -20,11 +20,12 @@ class ApiUserController
     }
 
     /**
-     * GET /api/users - Tüm kullanıcıları listele (READ ALL)
+     * GET /api/users - Tüm kullanıcıları listele (READ ALL / Search)
      */
     public function index(): void
     {
-        $users = User::all();
+        $search = trim($_GET['q'] ?? '');
+        $users = !empty($search) ? User::search($search) : User::all();
         Response::json($users, 200);
     }
 

@@ -36,6 +36,41 @@ class User
     }
 
     /**
+     * Toplam kayıt sayısını döner.
+     */
+    public static function count(): int
+    {
+        $db = self::getDb();
+        return (int)$db->query("SELECT COUNT(*) FROM users")->fetchColumn();
+    }
+
+    /**
+     * İsim, şirket veya bölüme göre arama yapar.
+     */
+    public static function search(string $keyword): array
+    {
+        $db = self::getDb();
+        $term = '%' . trim($keyword) . '%';
+        $stmt = $db->prepare("
+            SELECT id, name, email, graduationYear, department, company, created_at 
+            FROM users 
+            WHERE name LIKE :t OR company LIKE :t OR department LIKE :t OR email LIKE :t
+            ORDER BY id ASC
+        ");
+        $stmt->execute([':t' => $term]);
+        $results = $stmt->fetchAll();
+
+        foreach ($results as &$row) {
+            if ($row['graduationYear'] !== null) {
+                $row['graduationYear'] = (int)$row['graduationYear'];
+            }
+            $row['id'] = (int)$row['id'];
+        }
+
+        return $results;
+    }
+
+    /**
      * READ ONE (C[R]UD) - ID'ye göre tek bir kullanıcıyı getirir.
      */
     public static function find(int $id): ?array
