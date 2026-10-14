@@ -13,6 +13,9 @@ WORKDIR /var/www/html
 COPY . /var/www/html/
 
 # Gerekli dosya ve dizin izinlerini ayarla (Veritabanı yazma izinleri)
-RUN mkdir -p /var/www/html/data && chown -R www-data:www-data /var/www/html && chmod -R 775 /var/www/html/data
+RUN mkdir -p /var/www/html/data && chown -R www-data:www-data /var/www/html && chmod -R 777 /var/www/html/data
 
 EXPOSE 80
+
+# Konteyner ayağa kalktığında bağlanan volume üzerindeki data dizini izinlerini garantiye al ve Apache'yi başlat
+CMD ["sh", "-c", "mkdir -p /var/www/html/data && chmod -R 777 /var/www/html/data 2>/dev/null || true; apache2-foreground"]

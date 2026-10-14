@@ -22,7 +22,10 @@
                             🎓 YBSB3001 · Web Programming
                         </span>
                         <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 rounded-pill">
-                            🏛️ MVC Architecture Active (Week 04)
+                            🏛️ MVC Architecture (Week 04)
+                        </span>
+                        <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle px-3 py-2 rounded-pill">
+                            🗄️ Data Design & Persistence (Week 05)
                         </span>
                     </div>
                     <h1 class="display-6 fw-bold text-dark mb-2">Alumni Tracking System</h1>

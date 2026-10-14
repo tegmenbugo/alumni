@@ -97,6 +97,7 @@ alumni/
 ├── index.php                           # [FRONT CONTROLLER] Tüm istekleri karşılayan tek giriş noktası
 ├── .htaccess                           # Apache URL rewrite motoru (Tüm trafiği index.php'ye yönlendirir)
 ├── .gitignore                          # Sürüm kontrolü dışı dosyalar
+├── ddd.md                              # [DATA DESIGN] Kapsamlı veri sözlüğü, ERD ve şema sözleşmesi
 └── README.md                           # Proje mimarisi, sözleşmesi ve dokümantasyonu
 ```
 
@@ -170,14 +171,33 @@ Sistemde iki ayrı Controller üzerinden hem son kullanıcılar için HTML taban
 
 ---
 
+## 🗄️ Veri Mimarisi ve Tasarım Dokümantasyonu (Data Design - ddd.md)
+
+Projenin kapsamlı etki alanı (domain) analizi, varlık-ilişki diyagramı (ERD), veri sözlüğü, SQL DDL şeması ve sentetik tohum veri kümesi bağımsız bir mimari sözleşme olarak **`ddd.md`** dosyasında belgelenmiştir:
+
+👉 **[Kapsamlı Veri Tasarım Dokümanı (ddd.md)](./ddd.md)**
+
+### 🛡️ "The Forgetting Test" (Unutma Testi) ve Konteyner Veri Kalıcılığı
+Docker mimarisinde konteynerlar kapatılıp yok edildiğinde (`docker compose down`) geçici katmandaki veriler silinir. Bu durumun önüne geçmek ve veritabanı sürekliliğini garanti altına almak için sistemde **Host Bind Mount** mimarisi uygulanmıştır:
+
+* **Bağlantı (Volume Mount):** `./data:/var/www/html/data`
+* **Test Protokolü:**
+  1. `docker compose up -d` ile sistem ayağa kaldırılır.
+  2. Web arayüzü (`/users`) veya REST API (`POST /api/users`) üzerinden yeni bir mezun kaydı eklenir.
+  3. `docker compose down` komutuyla konteyner tamamen kapatılır ve yok edilir.
+  4. `docker compose up -d` ile konteyner yeniden başlatıldığında, eklenen kaydın `data/alumni.sqlite` dosyası üzerinden **korunduğu ve asla unutulmadığı** doğrulanır.
+* Detaylı analiz, ERD ve şema tanımları için bkz: **[ddd.md — Bölüm 7 (Veri Kalıcılığı Analizi)](./ddd.md#-7-veri-kalıcılığı-ve-the-forgetting-test-analizi)**.
+
+---
+
 ## 🗓️ Dönem Yol Haritası (Fourteen Weeks Roadmap)
 
 * [x] **Week 01:** Project inception & fundamentals, repository setup, stack selection & justification.
 * [x] **Week 02:** Routing — the doors of the system (GET endpoints: `/Alumni`, `/hello`, `/hello/{name}`, `/sum/{n1}/{n2}`, `/about`, `/`).
 * [x] **Week 03:** HTTP methods & CRUD on `/api/users` (GET, POST, PUT, PATCH, DELETE) + Swagger UI at `/api/swagger`.
 * [x] **Week 04:** MVC architecture (Decoupled Front Controller, Router, Controllers [UserController & ApiUserController], Models [PDO User], Views, and synchronized Swagger UI).
-* [ ] **Week 05:** Database & ORM.
-* [ ] **Week 06:** Database integration.
+* [x] **Week 05:** Database & ORM — Data Design Documentation (`ddd.md`), ERD modeling, SQLite PDO persistence, and passing "The Forgetting Test" with Docker volumes.
+* [ ] **Week 06:** Database integration & multi-table relationships.
 * [ ] **Week 07:** Relational data & advanced routing.
 * [ ] **Week 08:** Midterm — code review.
 * [ ] **Week 09:** Middleware — the bouncer.

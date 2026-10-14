@@ -48,7 +48,7 @@ class ApiController
             'openapi' => '3.0.0',
             'info' => [
                 'title'       => 'Alumni Tracking System API',
-                'description' => "YBSB3001 Web Programming - MVC Architecture & REST Endpoints.\n\n• REST API uç noktaları ApiUserController tarafından yönetilmektedir.\n• Web HTML arayüzü rotaları (/users) UserController tarafından yönetilmektedir.\n• Swagger/OpenAPI şeması her rota ve controller değişikliğinde sürekli güncel tutulur.",
+                'description' => "YBSB3001 Web Programming - MVC Architecture & REST Endpoints.\n\n• REST API uç noktaları ApiUserController tarafından yönetilmektedir.\n• Web HTML arayüzü rotaları (/users) UserController tarafından yönetilmektedir.\n• Kapsamlı Veri Tasarımı, ERD ve Veri Sözlüğü için ddd.md dokümanına bakınız.\n• Swagger/OpenAPI şeması her rota ve controller değişikliğinde sürekli güncel tutulur.",
                 'version'     => '1.0.0'
             ],
             'tags' => [
