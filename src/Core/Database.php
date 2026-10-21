@@ -26,14 +26,18 @@ class Database
                 self::$instance = self::connectSqlite();
             }
 
-            // ddd.md şemasına göre tüm tabloları ve sentetik verileri migrasyonla üret
-            try {
-                Migration::run(self::$instance);
-                if (class_exists(\Database\Seeders\DatabaseSeeder::class)) {
-                    \Database\Seeders\DatabaseSeeder::run(self::$instance);
+            // Yeni migrasyonların hocanın talimatı gereği ("just create dont migrate")
+            // otomatik uygulanmaması için migrasyonlar php migrate.php ile manuel yürütülür.
+            $autoMigrate = Env::get('AUTO_MIGRATE', false);
+            if ($autoMigrate) {
+                try {
+                    Migration::run(self::$instance);
+                    if (class_exists(\Database\Seeders\DatabaseSeeder::class)) {
+                        \Database\Seeders\DatabaseSeeder::run(self::$instance);
+                    }
+                } catch (\Exception $e) {
+                    error_log("Migrasyon uyarısı: " . $e->getMessage());
                 }
-            } catch (\Exception $e) {
-                error_log("Otomatik migrasyon/seeder uyarısı: " . $e->getMessage());
             }
         }
 

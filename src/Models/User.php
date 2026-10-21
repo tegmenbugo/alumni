@@ -206,4 +206,55 @@ class User
 
         return $existing;
     }
+
+    // =========================================================================
+    // İLİŞKİLER (RELATIONSHIPS) - Hafta 06 (Görev 3)
+    // =========================================================================
+
+    /**
+     * RELATIONSHIP: HasMany JobPosting
+     * Bu mezunun/kullanıcının yayınladığı tüm iş ilanlarını getirir.
+     */
+    public static function jobPostings(int $userId): array
+    {
+        $db = self::getDb();
+        $stmt = $db->prepare("
+            SELECT * FROM job_postings 
+            WHERE posted_by_user_id = :user_id 
+            ORDER BY created_at DESC
+        ");
+        $stmt->execute([':user_id' => $userId]);
+        return $stmt->fetchAll() ?: [];
+    }
+
+    /**
+     * RELATIONSHIP: HasMany JobApplication
+     * Bu kullanıcının/öğrencinin yaptığı tüm iş başvurularını ve ilan detayını getirir.
+     */
+    public static function jobApplications(int $userId): array
+    {
+        $db = self::getDb();
+        $stmt = $db->prepare("
+            SELECT ja.*, jp.title as job_title, jp.company_name as job_company
+            FROM job_applications ja
+            INNER JOIN job_postings jp ON ja.job_posting_id = jp.id
+            WHERE ja.applicant_user_id = :user_id
+            ORDER BY ja.applied_at DESC
+        ");
+        $stmt->execute([':user_id' => $userId]);
+        return $stmt->fetchAll() ?: [];
+    }
+
+    /**
+     * RELATIONSHIP: HasOne Profile
+     * Kullanıcının detaylı biyografi ve profil bilgilerini getirir.
+     */
+    public static function profile(int $userId): ?array
+    {
+        $db = self::getDb();
+        $stmt = $db->prepare("SELECT * FROM profiles WHERE user_id = :user_id");
+        $stmt->execute([':user_id' => $userId]);
+        $row = $stmt->fetch();
+        return $row ?: null;
+    }
 }

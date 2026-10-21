@@ -131,11 +131,20 @@ erDiagram
         string title
         string company_name
         string employment_type
+        string workplace_type
         string location
+        string experience_level
+        decimal salary_min
+        decimal salary_max
+        string salary_currency
         text description
+        text requirements
+        string contact_email
+        string application_url
         string status
         datetime deadline
         datetime created_at
+        datetime updated_at
     }
 
     JOB_APPLICATIONS {
@@ -227,21 +236,42 @@ Mezunların sahip olduğu teknik ve sektörel yetenekleri N:M ilişki ile harita
 | `user_skills` | `skill_id` | `INTEGER` | FK (`skills.id`), NOT NULL | İlgili yetenek |
 | `user_skills` | `proficiency` | `VARCHAR(30)` | DEFAULT `'Orta'` | Seviye (`Başlangıç`, `Orta`, `İleri`, `Uzman`) |
 
-### 4.6. `job_postings` & `job_applications` Tabloları (Kariyer ve Başvuru)
-Mezunların açtığı iş ilanları ve öğrencilerin başvurularını yönetir.
+### 4.6. `job_postings` Tablosu (Kariyer ve İş/Staj İlanları - Hafta 06 Güncellemesi)
+Mezunların, partner şirketlerin veya kurum temsilcilerinin açtığı iş/staj ilanlarını ve aday kriterlerini yönetir.
 
-| Tablo | Sütun | Tip | Kısıtlamalar | Açıklama |
+| Sütun Adı | Veri Tipi | Kısıtlamalar (Constraints) | Varsayılan | Açıklama |
 | :--- | :--- | :--- | :--- | :--- |
-| `job_postings` | `id` | `INTEGER` | PK, AUTOINCREMENT | İlan ID |
-| `job_postings` | `posted_by_user_id` | `INTEGER` | FK (`users.id`), NOT NULL | İlanı oluşturan mezun |
-| `job_postings` | `title` | `VARCHAR(150)` | NOT NULL | Pozisyon başlığı (Örn: `Junior Backend Developer`) |
-| `job_postings` | `company_name` | `VARCHAR(150)` | NOT NULL | Şirket adı |
-| `job_postings` | `location` | `VARCHAR(100)` | DEFAULT `'İstanbul / Hibrit'` | Çalışma yeri |
-| `job_postings` | `status` | `VARCHAR(30)` | DEFAULT `'open'` | İlan durumu (`open`, `closed`) |
-| `job_applications`| `id` | `INTEGER` | PK, AUTOINCREMENT | Başvuru ID |
-| `job_applications`| `job_posting_id` | `INTEGER` | FK (`job_postings.id`), NOT NULL | İlgili iş ilanı |
-| `job_applications`| `applicant_user_id`| `INTEGER` | FK (`users.id`), NOT NULL | Başvuran öğrenci / mezun |
-| `job_applications`| `status` | `VARCHAR(30)` | DEFAULT `'applied'` | Durum (`applied`, `reviewing`, `accepted`, `rejected`) |
+| `id` | `INTEGER` | PRIMARY KEY, AUTOINCREMENT | - | Benzersiz ilan numarası |
+| `posted_by_user_id` | `INTEGER` | FK (`users.id`), NOT NULL | - | İlanı oluşturan mezun / kullanıcı referansı |
+| `title` | `VARCHAR(150)` | NOT NULL | - | İlan pozisyon başlığı (Örn: `Junior PHP Developer`) |
+| `company_name` | `VARCHAR(150)` | NOT NULL | - | İstihdam sağlayan şirket / kurum adı |
+| `employment_type` | `VARCHAR(50)` | NOT NULL | `'Tam Zamanlı'` | Çalışma biçimi (`Tam Zamanlı`, `Yarı Zamanlı`, `Staj`, `Sözleşmeli`, `Freelance`) |
+| `workplace_type` | `VARCHAR(50)` | NOT NULL | `'Hibrit'` | Çalışma ortamı modeli (`Ofisten`, `Hibrit`, `Uzaktan / Remote`) |
+| `location` | `VARCHAR(100)` | NULL | `'İstanbul, Türkiye'` | Şehir / Ülke lokasyon bilgisi |
+| `experience_level` | `VARCHAR(50)` | NOT NULL | `'Giriş Seviyesi'` | Deneyim seviyesi (`Stajyer`, `Giriş Seviyesi`, `Orta Seviye`, `Kıdemli`) |
+| `salary_min` | `DECIMAL(10,2)` | NULL | `NULL` | Asgari maaş skalası |
+| `salary_max` | `DECIMAL(10,2)` | NULL | `NULL` | Azami maaş skalası |
+| `salary_currency` | `VARCHAR(10)` | DEFAULT `'TRY'` | `'TRY'` | Maaş para birimi (`TRY`, `USD`, `EUR`) |
+| `description` | `TEXT` | NOT NULL | - | Detaylı rol tanımı, sorumluluklar ve şirket tanıtımı |
+| `requirements` | `TEXT` | NULL | `NULL` | Aranan teknik/sosyal nitelikler ve yetkinlikler |
+| `contact_email` | `VARCHAR(191)` | NULL | `NULL` | Başvuru ve soru iletişim e-postası |
+| `application_url` | `VARCHAR(255)` | NULL | `NULL` | Harici başvuru bağlantısı (LinkedIn, Kariyer.net vb.) |
+| `status` | `VARCHAR(30)` | NOT NULL | `'active'` | İlan durumu (`active`, `closed`, `draft`, `archived`) |
+| `deadline` | `DATE` | NULL | `NULL` | İlan son başvuru tarihi |
+| `created_at` | `DATETIME` | NOT NULL | `CURRENT_TIMESTAMP` | İlanın oluşturulma tarihi |
+| `updated_at` | `DATETIME` | NULL | `CURRENT_TIMESTAMP` | İlanın son güncellenme tarihi |
+
+### 4.7. `job_applications` Tablosu (İş Başvuruları)
+Öğrencilerin ve mezunların açık iş ilanlarına yaptıkları başvuruları ve başvuru durumlarını yönetir.
+
+| Sütun Adı | Veri Tipi | Kısıtlamalar | Varsayılan | Açıklama |
+| :--- | :--- | :--- | :--- | :--- |
+| `id` | `INTEGER` | PK, AUTOINCREMENT | - | Başvuru kayıt ID |
+| `job_posting_id` | `INTEGER` | FK (`job_postings.id`), NOT NULL | - | İlgili iş ilanı |
+| `applicant_user_id`| `INTEGER` | FK (`users.id`), NOT NULL | - | Başvuran mezun / öğrenci referansı |
+| `status` | `VARCHAR(30)` | NOT NULL | `'applied'` | Durum (`applied`, `reviewing`, `interview`, `accepted`, `rejected`) |
+| `cover_letter` | `TEXT` | NULL | `NULL` | Ön yazı ve motivasyon mektubu |
+| `applied_at` | `DATETIME` | NOT NULL | `CURRENT_TIMESTAMP` | Başvuru zaman damgası |
 
 ---
 
@@ -335,20 +365,33 @@ CREATE TABLE IF NOT EXISTS user_skills (
     UNIQUE(user_id, skill_id)
 );
 
--- 6. JOB_POSTINGS & JOB_APPLICATIONS TABLOLARI (Kariyer Fırsatları)
+-- 6. JOB_POSTINGS & JOB_APPLICATIONS TABLOLARI (Kariyer Fırsatları - Hafta 06)
 CREATE TABLE IF NOT EXISTS job_postings (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     posted_by_user_id INTEGER NOT NULL,
     title VARCHAR(150) NOT NULL,
     company_name VARCHAR(150) NOT NULL,
     employment_type VARCHAR(50) DEFAULT 'Tam Zamanlı',
-    location VARCHAR(100) DEFAULT 'İstanbul / Hibrit',
-    description TEXT,
-    status VARCHAR(30) DEFAULT 'open',
-    deadline DATETIME,
+    workplace_type VARCHAR(50) DEFAULT 'Hibrit',
+    location VARCHAR(100) DEFAULT 'İstanbul, Türkiye',
+    experience_level VARCHAR(50) DEFAULT 'Giriş Seviyesi',
+    salary_min DECIMAL(10,2),
+    salary_max DECIMAL(10,2),
+    salary_currency VARCHAR(10) DEFAULT 'TRY',
+    description TEXT NOT NULL,
+    requirements TEXT,
+    contact_email VARCHAR(191),
+    application_url VARCHAR(255),
+    status VARCHAR(30) DEFAULT 'active',
+    deadline DATE,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (posted_by_user_id) REFERENCES users(id) ON DELETE CASCADE
 );
+
+CREATE INDEX IF NOT EXISTS idx_job_postings_user ON job_postings(posted_by_user_id);
+CREATE INDEX IF NOT EXISTS idx_job_postings_status ON job_postings(status);
+CREATE INDEX IF NOT EXISTS idx_job_postings_company ON job_postings(company_name);
 
 CREATE TABLE IF NOT EXISTS job_applications (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -544,6 +587,7 @@ Sistemin veriyi unutmadığını test etmek için aşağıdaki 4 adım izlenir:
 | `005_create_skills_tables.sql` | Yetenek kataloğu ve eşleşmeler (N:M) | `skills`, `user_skills` |
 | `006_create_job_postings_tables.sql` | İş/staj ilanları ve başvurular | `job_postings`, `job_applications` |
 | `007_seed_initial_data.sql` | İÜ YBS mezunları ve sentetik tohum verisi | Tüm tablolar |
+| `008_update_job_postings_table.sql` | (Hafta 06) İlan tablosu genişletme (workplace, salary, requirements) | `job_postings` |
 
 ### CLI ve API Üzerinden Çalıştırma:
 ```bash

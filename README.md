@@ -90,7 +90,7 @@ sequenceDiagram
 
 ```text
 alumni/
-├── database/                           # [VERİTABANI MİGRASYONLARI - Görev 5]
+├── database/                           # [VERİTABANI MİGRASYONLARI]
 │   └── migrations/                     # ddd.md şemasına göre SQL migrasyon betikleri
 │       ├── 001_create_users_table.sql
 │       ├── 002_create_profiles_table.sql
@@ -98,7 +98,8 @@ alumni/
 │       ├── 004_create_work_experiences_table.sql
 │       ├── 005_create_skills_tables.sql
 │       ├── 006_create_job_postings_tables.sql
-│       └── 007_seed_initial_data.sql
+│       ├── 007_seed_initial_data.sql
+│       └── 008_update_job_postings_table.sql # [Hafta 06 - Görev 2] Bekleyen migrasyon
 │
 ├── data/                               # [KALICI VERİ DEPOSU (Volume)]
 │   ├── alumni.sqlite                   # SQLite veritabanı dosyası
@@ -113,8 +114,10 @@ alumni/
 │   │   ├── Response.php                # JSON, Text ve Redirect HTTP yanıt üreticisi
 │   │   └── View.php                    # HTML şablon renderer
 │   │
-│   ├── Models/                         # [MODEL KATMANI (M)]
-│   │   └── User.php                    # Database bağlantılı model (CRUD fonksiyonları)
+│   ├── Models/                         # [MODEL KATMANI (M) - Hafta 06 (Görev 3)]
+│   │   ├── User.php                    # Kullanıcı modeli (İş ilanları ve başvuru ilişkileri ile)
+│   │   ├── JobPosting.php              # [YENİ] İş İlanı modeli (BelongsTo User, HasMany Applications)
+│   │   └── JobApplication.php          # [YENİ] Başvuru modeli (BelongsTo JobPosting, BelongsTo User)
 │   │
 │   └── Controllers/                    # [CONTROLLER KATMANI (C)]
 │       ├── UserController.php          # [Web Controller] HTML arayüz CRUD işlemleri (/users)
@@ -266,7 +269,7 @@ Docker mimarisinde konteynerlar kapatılıp yok edildiğinde (`docker compose do
 * [x] **Week 03:** HTTP methods & CRUD on `/api/users` (GET, POST, PUT, PATCH, DELETE) + Swagger UI at `/api/swagger`.
 * [x] **Week 04:** MVC architecture (Decoupled Front Controller, Router, Controllers [UserController & ApiUserController], Models [PDO User], Views, and synchronized Swagger UI).
 * [x] **Week 05:** Database & ORM — Data Design Documentation (`ddd.md`), Docker Compose Database Service (`db`), Environment Variables (`.env` vs `.example.env`), Migration Engine (`migrate.php`), and passing "The Forgetting Test".
-* [ ] **Week 06:** Database integration & multi-table relationships.
+* [x] **Week 06:** Database integration & multi-table relationships — Updated `job_postings` table in `ddd.md`, created `008_update_job_postings_table.sql` migration (pending/unmigrated), and implemented `JobPosting` & `JobApplication` relational models with `User` relationships.
 * [ ] **Week 07:** Relational data & advanced routing.
 * [ ] **Week 08:** Midterm — code review.
 * [ ] **Week 09:** Middleware — the bouncer.
