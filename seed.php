@@ -48,8 +48,9 @@ try {
     foreach ($result['details'] as $msg) {
         echo "   [✓] {$msg}\n";
     }
-    echo "📊 Veritabanındaki Toplam Mezun Sayısı: " . $result['totalUsers'] . "\n";
-    echo "✅ Artık CRUD ekranlarınız (http://localhost:8000/users) verilerle dolup taşıyor!\n\n";
+    echo "📊 Toplam Mezun Sayısı: " . $result['totalUsers'] . "\n";
+    echo "💼 Toplam İş/Staj İlanı: " . ($result['totalJobs'] ?? 0) . "\n";
+    echo "✅ Artık Mezun ve İlan ekranlarınız (http://localhost:8000/jobs) zengin verilerle dolup taşıyor!\n\n";
 
 } catch (Exception $e) {
     echo "\n❌ HATA: " . $e->getMessage() . "\n\n";

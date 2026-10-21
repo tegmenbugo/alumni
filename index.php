@@ -28,6 +28,9 @@ use App\Controllers\HomeController;
 use App\Controllers\UserController;
 use App\Controllers\ApiUserController;
 use App\Controllers\ApiController;
+use App\Controllers\JobPostingController;
+use App\Controllers\ApiJobController;
+use App\Controllers\ApiApplicationController;
 
 // 2. Global CORS Başlıkları
 header('Access-Control-Allow-Origin: *');
@@ -78,6 +81,44 @@ $router->get('/api/users/{id}',   [ApiUserController::class, 'show']);
 $router->put('/api/users/{id}',   [ApiUserController::class, 'update']);
 $router->patch('/api/users/{id}', [ApiUserController::class, 'patch']);
 $router->delete('/api/users/{id}',[ApiUserController::class, 'destroy']);
+
+// -------------------------------------------------------------
+// WEB UI: JobPostingController (Hafta 06 - Görev 4 & Ödev)
+// -------------------------------------------------------------
+$router->get('/jobs',               [JobPostingController::class, 'index']); // İlanlar Portalı
+$router->post('/jobs',              [JobPostingController::class, 'store']); // İlan Yayınlama Formu
+$router->get('/jobs/{id}',          [JobPostingController::class, 'show']);  // İlan Detayı & Başvuru UI
+$router->post('/jobs/{id}/apply',   [JobPostingController::class, 'apply']); // İlana Başvuru Formu
+
+// -------------------------------------------------------------
+// REST API DOĞRUDAN ROTALAR (DIRECT ROUTES) - Hafta 06 (Görev 4 & 5)
+// -------------------------------------------------------------
+// 1. İş İlanları Doğrudan Rotaları
+$router->get('/api/jobs',            [ApiJobController::class, 'index']);
+$router->post('/api/jobs',           [ApiJobController::class, 'store']);
+$router->get('/api/jobs/{id}',       [ApiJobController::class, 'show']);
+$router->put('/api/jobs/{id}',       [ApiJobController::class, 'update']);
+$router->delete('/api/jobs/{id}',    [ApiJobController::class, 'destroy']);
+
+// 2. Başvurular Doğrudan Rotaları
+$router->get('/api/applications',       [ApiApplicationController::class, 'index']);
+$router->get('/api/applications/{id}',   [ApiApplicationController::class, 'show']);
+$router->patch('/api/applications/{id}', [ApiApplicationController::class, 'updateStatus']);
+$router->delete('/api/applications/{id}',[ApiApplicationController::class, 'destroy']);
+
+// -------------------------------------------------------------
+// REST API İLİŞKİSEL / İÇ İÇE ROTALAR (NESTED ROUTES) - Hafta 06 (Görev 4 & 5)
+// -------------------------------------------------------------
+// Kullanıcı -> İlanları (User -> JobPostings)
+$router->get('/api/users/{userId}/jobs',          [ApiJobController::class, 'userJobs']);
+$router->post('/api/users/{userId}/jobs',         [ApiJobController::class, 'userStoreJob']);
+
+// İlan -> Başvuruları (JobPosting -> Applications)
+$router->get('/api/jobs/{jobId}/applications',    [ApiJobController::class, 'jobApplications']);
+$router->post('/api/jobs/{jobId}/applications',   [ApiJobController::class, 'applyJob']);
+
+// Kullanıcı -> Başvuruları (User -> Applications)
+$router->get('/api/users/{userId}/applications',  [ApiJobController::class, 'userApplications']);
 
 // 4. İsteği Yönlendir (Dispatch)
 $router->dispatch();

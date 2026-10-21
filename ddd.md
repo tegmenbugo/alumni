@@ -153,7 +153,12 @@ erDiagram
         int applicant_user_id FK
         string status
         text cover_letter
+        string resume_url
+        string portfolio_url
+        text notes
+        datetime interview_date
         datetime applied_at
+        datetime updated_at
     }
 ```
 
@@ -261,17 +266,22 @@ Mezunların, partner şirketlerin veya kurum temsilcilerinin açtığı iş/staj
 | `created_at` | `DATETIME` | NOT NULL | `CURRENT_TIMESTAMP` | İlanın oluşturulma tarihi |
 | `updated_at` | `DATETIME` | NULL | `CURRENT_TIMESTAMP` | İlanın son güncellenme tarihi |
 
-### 4.7. `job_applications` Tablosu (İş Başvuruları)
-Öğrencilerin ve mezunların açık iş ilanlarına yaptıkları başvuruları ve başvuru durumlarını yönetir.
+### 4.7. `job_applications` Tablosu (İş Başvuruları - Hafta 06 Güncellemesi)
+Öğrencilerin ve mezunların açık iş ilanlarına yaptıkları başvuruları, CV bağlantılarını ve değerlendirme süreçlerini yönetir.
 
 | Sütun Adı | Veri Tipi | Kısıtlamalar | Varsayılan | Açıklama |
 | :--- | :--- | :--- | :--- | :--- |
 | `id` | `INTEGER` | PK, AUTOINCREMENT | - | Başvuru kayıt ID |
-| `job_posting_id` | `INTEGER` | FK (`job_postings.id`), NOT NULL | - | İlgili iş ilanı |
+| `job_posting_id` | `INTEGER` | FK (`job_postings.id`), NOT NULL | - | İlgili iş ilanı referansı |
 | `applicant_user_id`| `INTEGER` | FK (`users.id`), NOT NULL | - | Başvuran mezun / öğrenci referansı |
-| `status` | `VARCHAR(30)` | NOT NULL | `'applied'` | Durum (`applied`, `reviewing`, `interview`, `accepted`, `rejected`) |
+| `status` | `VARCHAR(30)` | NOT NULL | `'applied'` | Durum (`applied`, `reviewing`, `interview`, `accepted`, `rejected`, `withdrawn`) |
 | `cover_letter` | `TEXT` | NULL | `NULL` | Ön yazı ve motivasyon mektubu |
+| `resume_url` | `VARCHAR(255)` | NULL | `NULL` | CV / Özgeçmiş PDF bağlantısı |
+| `portfolio_url` | `VARCHAR(255)` | NULL | `NULL` | GitHub / Portfolyo bağlantısı |
+| `notes` | `TEXT` | NULL | `NULL` | İşe alım yöneticisi mülakat ve değerlendirme notları |
+| `interview_date`| `DATETIME` | NULL | `NULL` | Planlanan mülakat tarihi |
 | `applied_at` | `DATETIME` | NOT NULL | `CURRENT_TIMESTAMP` | Başvuru zaman damgası |
+| `updated_at` | `DATETIME` | NULL | `CURRENT_TIMESTAMP` | Durum güncelleme zaman damgası |
 
 ---
 
@@ -399,11 +409,18 @@ CREATE TABLE IF NOT EXISTS job_applications (
     applicant_user_id INTEGER NOT NULL,
     status VARCHAR(30) DEFAULT 'applied',
     cover_letter TEXT,
+    resume_url VARCHAR(255),
+    portfolio_url VARCHAR(255),
+    notes TEXT,
+    interview_date DATETIME,
     applied_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (job_posting_id) REFERENCES job_postings(id) ON DELETE CASCADE,
     FOREIGN KEY (applicant_user_id) REFERENCES users(id) ON DELETE CASCADE,
     UNIQUE(job_posting_id, applicant_user_id)
 );
+
+CREATE INDEX IF NOT EXISTS idx_job_apps_status ON job_applications(status);
 ```
 
 ---
@@ -588,6 +605,7 @@ Sistemin veriyi unutmadığını test etmek için aşağıdaki 4 adım izlenir:
 | `006_create_job_postings_tables.sql` | İş/staj ilanları ve başvurular | `job_postings`, `job_applications` |
 | `007_seed_initial_data.sql` | İÜ YBS mezunları ve sentetik tohum verisi | Tüm tablolar |
 | `008_update_job_postings_table.sql` | (Hafta 06) İlan tablosu genişletme (workplace, salary, requirements) | `job_postings` |
+| `009_update_job_applications_table.sql` | (Hafta 06) Başvuru tablosu genişletme (resume, portfolio, notes, interview) | `job_applications` |
 
 ### CLI ve API Üzerinden Çalıştırma:
 ```bash

@@ -85,6 +85,14 @@ class ApiController
                     'description' => 'Mezun REST API CRUD operasyonları (JSON girdi / JSON çıktı)'
                 ],
                 [
+                    'name'        => 'JobPostings',
+                    'description' => 'İş ve Staj İlanları Rotaları (Doğrudan ve İlişkisel Rotalar - Hafta 06)'
+                ],
+                [
+                    'name'        => 'JobApplications',
+                    'description' => 'İş Başvuruları Rotaları (Doğrudan ve Nested Rotalar - Hafta 06)'
+                ],
+                [
                     'name'        => 'System',
                     'description' => 'Sistem sağlığı ve meta bilgiler'
                 ]
@@ -223,6 +231,93 @@ class ApiController
                             '200' => ['description' => 'Mezun başarıyla silindi'],
                             '404' => ['description' => 'Mezun bulunamadı']
                         ]
+                    ]
+                ],
+                '/api/jobs' => [
+                    'get' => [
+                        'tags'        => ['JobPostings'],
+                        'summary'     => 'Tüm iş ve staj ilanlarını listele (Doğrudan Rota) - ApiJobController::index',
+                        'parameters'  => [
+                            ['name' => 'q', 'in' => 'query', 'required' => false, 'schema' => ['type' => 'string']],
+                            ['name' => 'type', 'in' => 'query', 'required' => false, 'schema' => ['type' => 'string']]
+                        ],
+                        'responses'   => ['200' => ['description' => 'İlanlar listesi']]
+                    ],
+                    'post' => [
+                        'tags'        => ['JobPostings'],
+                        'summary'     => 'Yeni iş ilanı oluştur - ApiJobController::store',
+                        'requestBody' => [
+                            'required' => true,
+                            'content'  => [
+                                'application/json' => [
+                                    'schema' => [
+                                        'type'       => 'object',
+                                        'required'   => ['title', 'company_name'],
+                                        'properties' => [
+                                            'title'             => ['type' => 'string', 'example' => 'Junior Backend Developer'],
+                                            'company_name'      => ['type' => 'string', 'example' => 'Trendyol'],
+                                            'posted_by_user_id' => ['type' => 'integer', 'example' => 1],
+                                            'employment_type'   => ['type' => 'string', 'example' => 'Tam Zamanlı'],
+                                            'workplace_type'    => ['type' => 'string', 'example' => 'Hibrit'],
+                                            'description'       => ['type' => 'string', 'example' => 'Backend geliştirici pozisyonu']
+                                        ]
+                                    ]
+                                ]
+                            ]
+                        ],
+                        'responses'   => ['201' => ['description' => 'İlan oluşturuldu']]
+                    ]
+                ],
+                '/api/jobs/{id}' => [
+                    'get' => [
+                        'tags'       => ['JobPostings'],
+                        'summary'    => 'Tekil iş ilanı detayı - ApiJobController::show',
+                        'parameters' => [['name' => 'id', 'in' => 'path', 'required' => true, 'schema' => ['type' => 'integer']]],
+                        'responses'  => ['200' => ['description' => 'İlan detayı'], '404' => ['description' => 'İlan bulunamadı']]
+                    ]
+                ],
+                '/api/jobs/{id}/applications' => [
+                    'get' => [
+                        'tags'       => ['JobApplications'],
+                        'summary'    => 'İlana yapılan başvuruları listele (Nested Rota) - ApiJobController::jobApplications',
+                        'parameters' => [['name' => 'id', 'in' => 'path', 'required' => true, 'schema' => ['type' => 'integer']]],
+                        'responses'  => ['200' => ['description' => 'İlana ait başvurular']]
+                    ],
+                    'post' => [
+                        'tags'        => ['JobApplications'],
+                        'summary'     => 'İlana başvuru yap (Nested Rota) - ApiJobController::applyJob',
+                        'parameters'  => [['name' => 'id', 'in' => 'path', 'required' => true, 'schema' => ['type' => 'integer']]],
+                        'requestBody' => [
+                            'required' => true,
+                            'content'  => [
+                                'application/json' => [
+                                    'schema' => [
+                                        'type'       => 'object',
+                                        'required'   => ['applicant_user_id'],
+                                        'properties' => [
+                                            'applicant_user_id' => ['type' => 'integer', 'example' => 5],
+                                            'cover_letter'      => ['type' => 'string', 'example' => 'İlana başvurmak istiyorum.']
+                                        ]
+                                    ]
+                                ]
+                            ]
+                        ],
+                        'responses'   => ['201' => ['description' => 'Başvuru kaydedildi']]
+                    ]
+                ],
+                '/api/users/{id}/jobs' => [
+                    'get' => [
+                        'tags'       => ['JobPostings'],
+                        'summary'    => 'Mezunun yayınladığı ilanlar (Nested Rota) - ApiJobController::userJobs',
+                        'parameters' => [['name' => 'id', 'in' => 'path', 'required' => true, 'schema' => ['type' => 'integer']]],
+                        'responses'  => ['200' => ['description' => 'Mezunun ilanları']]
+                    ]
+                ],
+                '/api/applications' => [
+                    'get' => [
+                        'tags'      => ['JobApplications'],
+                        'summary'   => 'Tüm başvuruları listele (Doğrudan Rota) - ApiApplicationController::index',
+                        'responses' => ['200' => ['description' => 'Başvurular listesi']]
                     ]
                 ]
             ]

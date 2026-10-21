@@ -67,6 +67,13 @@
                                 </tr>
                                 <tr>
                                     <td><span class="badge bg-success">Web UI</span></td>
+                                    <td><span class="badge bg-success">GET</span></td>
+                                    <td><span class="endpoint-badge">/jobs</span></td>
+                                    <td><code>JobPostingController::index()</code> (İş/Staj Portalı - Hafta 06 Ödev)</td>
+                                    <td class="text-center"><a href="/jobs" class="btn btn-sm btn-primary">İlanlara Git ➔</a></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="badge bg-success">Web UI</span></td>
                                     <td><span class="badge bg-info text-dark">POST</span></td>
                                     <td><span class="endpoint-badge">/users</span></td>
                                     <td><code>UserController::store()</code> (HTML Form Kaydı / View Layer)</td>
@@ -120,6 +127,27 @@
                                     <td><span class="endpoint-badge">/api/users/{id}</span></td>
                                     <td><code>ApiUserController::destroy()</code></td>
                                     <td class="text-center"><a href="/api/swagger" class="btn btn-sm btn-outline-danger" target="_blank">Swagger'da Dene ↗</a></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="badge bg-primary">API</span></td>
+                                    <td><span class="badge bg-success">GET</span></td>
+                                    <td><span class="endpoint-badge">/api/jobs</span></td>
+                                    <td><code>ApiJobController::index()</code> (Doğrudan Rota)</td>
+                                    <td class="text-center"><a href="/api/jobs" class="btn btn-sm btn-outline-primary" target="_blank">Aç ↗</a></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="badge bg-primary">API</span></td>
+                                    <td><span class="badge bg-info text-dark">NESTED</span></td>
+                                    <td><span class="endpoint-badge">/api/jobs/{id}/applications</span></td>
+                                    <td><code>ApiJobController::jobApplications()</code> (İlişkisel Rota)</td>
+                                    <td class="text-center"><a href="/api/swagger" class="btn btn-sm btn-outline-info" target="_blank">Swagger'da Dene ↗</a></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="badge bg-primary">API</span></td>
+                                    <td><span class="badge bg-info text-dark">NESTED</span></td>
+                                    <td><span class="endpoint-badge">/api/users/{id}/jobs</span></td>
+                                    <td><code>ApiJobController::userJobs()</code> (İlişkisel Rota)</td>
+                                    <td class="text-center"><a href="/api/swagger" class="btn btn-sm btn-outline-info" target="_blank">Swagger'da Dene ↗</a></td>
                                 </tr>
                                 <tr>
                                     <td><span class="badge bg-secondary">Web</span></td>

@@ -113,12 +113,42 @@ class DatabaseSeeder
             $stmtProf->execute($p);
         }
 
+        // 5. İş İlanlarını Tohumla (Job Postings - Hafta 06 Görev 6)
+        try {
+            $jobsCount = (int)$db->query("SELECT COUNT(*) FROM job_postings")->fetchColumn();
+            if ($jobsCount < 6 && class_exists(\Database\Factories\JobPostingFactory::class)) {
+                $neededJobs = 6 - $jobsCount;
+                \Database\Factories\JobPostingFactory::createMany($neededJobs);
+                $seededInfo[] = "JobPostingFactory ile {$neededJobs} yeni iş/staj ilanı üretildi.";
+            }
+
+            // 6. Örnek Başvuru Tohumla (Job Applications)
+            $appsCount = (int)$db->query("SELECT COUNT(*) FROM job_applications")->fetchColumn();
+            if ($appsCount === 0) {
+                $stmtApp = $db->prepare("
+                    INSERT OR IGNORE INTO job_applications (job_posting_id, applicant_user_id, status, cover_letter)
+                    VALUES (?, ?, ?, ?)
+                ");
+                $stmtApp->execute([1, 5, 'applied', 'İÜ YBS öğrencisiyim. Backend geliştirme ve PHP konusunda projelerim bulunmaktadır.']);
+                $stmtApp->execute([2, 4, 'reviewing', 'Veri analitiği ve SQL tecrübelerimle ilana başvurmak istiyorum.']);
+                $seededInfo[] = "Örnek iş başvuruları tohumlandı.";
+            }
+        } catch (\Exception $e) {
+            $seededInfo[] = "İlan tohumlama notu: " . $e->getMessage();
+        }
+
         $totalUsers = (int)$db->query("SELECT COUNT(*) FROM users")->fetchColumn();
-        $seededInfo[] = "Toplam mezun sayısı: {$totalUsers}";
+        $totalJobs = 0;
+        try {
+            $totalJobs = (int)$db->query("SELECT COUNT(*) FROM job_postings")->fetchColumn();
+        } catch (\Exception $e) {}
+
+        $seededInfo[] = "Toplam mezun sayısı: {$totalUsers}, Toplam iş ilanı: {$totalJobs}";
 
         return [
             'status'     => 'success',
             'totalUsers' => $totalUsers,
+            'totalJobs'  => $totalJobs,
             'details'    => $seededInfo
         ];
     }
