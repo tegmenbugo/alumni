@@ -254,18 +254,26 @@ class ApiController
                                         'type'       => 'object',
                                         'required'   => ['title', 'company_name'],
                                         'properties' => [
-                                            'title'             => ['type' => 'string', 'example' => 'Junior Backend Developer'],
-                                            'company_name'      => ['type' => 'string', 'example' => 'Trendyol'],
+                                            'title'             => ['type' => 'string', 'maxLength' => 120, 'example' => 'Junior Backend Developer'],
+                                            'company_name'      => ['type' => 'string', 'maxLength' => 120, 'example' => 'Trendyol'],
                                             'posted_by_user_id' => ['type' => 'integer', 'example' => 1],
                                             'employment_type'   => ['type' => 'string', 'example' => 'Tam Zamanlı'],
                                             'workplace_type'    => ['type' => 'string', 'example' => 'Hibrit'],
-                                            'description'       => ['type' => 'string', 'example' => 'Backend geliştirici pozisyonu']
+                                            'location'          => ['type' => 'string', 'maxLength' => 100, 'example' => 'İstanbul, Türkiye'],
+                                            'salary_min'        => ['type' => 'number', 'example' => 45000],
+                                            'salary_max'        => ['type' => 'number', 'example' => 65000],
+                                            'contact_email'     => ['type' => 'string', 'format' => 'email', 'example' => 'hr@trendyol.com'],
+                                            'description'       => ['type' => 'string', 'nullable' => true, 'example' => 'Backend geliştirici pozisyonu']
                                         ]
                                     ]
                                 ]
                             ]
                         ],
-                        'responses'   => ['201' => ['description' => 'İlan oluşturuldu']]
+                        'responses'   => [
+                            '201' => ['description' => 'İlan başarıyla oluşturuldu'],
+                            '400' => ['description' => 'Geçersiz JSON veya gövde'],
+                            '422' => ['description' => 'Doğrulama hatası (Validation Failed per ddd.md)']
+                        ]
                     ]
                 ],
                 '/api/jobs/{id}' => [

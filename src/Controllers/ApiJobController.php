@@ -43,24 +43,57 @@ class ApiJobController
 
     /**
      * POST /api/jobs - Yeni iş ilanı oluştur
+     * ddd.md Hafta 07 İş Kuralları ve Doğrulama Denetimi
      */
     public function store(): void
     {
-        $data = $this->getJsonInput();
-
-        if (empty($data['title']) || empty($data['company_name'])) {
-            Response::json(['error' => 'title ve company_name alanları zorunludur.'], 400);
+        $raw = file_get_contents('php://input');
+        if (trim($raw) === '') {
+            Response::json([
+                'error' => 'Boş istek gövdesi (Empty request body)',
+                'message' => 'Lütfen JSON formatında geçerli bir veri gönderin.'
+            ], 400);
             return;
         }
 
-        if (empty($data['posted_by_user_id'])) {
-            // Varsayılan ilk mezun kullanıcıyı ata
+        $data = json_decode($raw, true);
+        if ($data === null && json_last_error() !== JSON_ERROR_NONE) {
+            Response::json([
+                'error' => 'Geçersiz JSON sözdizimi (Invalid JSON syntax)',
+                'message' => 'JSON ayrıştırılamadı: ' . json_last_error_msg()
+            ], 400);
+            return;
+        }
+
+        // Hafta 07: ddd.md Doğrulama Kuralları
+        $errors = JobPosting::validate($data);
+
+        // Kullanıcı kontrolü (Foreign Key bütünlüğü)
+        if (!empty($data['posted_by_user_id'])) {
+            $user = User::find((int)$data['posted_by_user_id']);
+            if (!$user) {
+                $errors['posted_by_user_id'] = 'Belirtilen kullanıcı (posted_by_user_id: ' . (int)$data['posted_by_user_id'] . ') sistemde mevcut değil.';
+            }
+        } else {
+            // Belirtilmediyse sistemdeki ilk aktif kullanıcıyı ata
             $users = User::all();
             $data['posted_by_user_id'] = !empty($users) ? $users[0]['id'] : 1;
         }
 
+        if (!empty($errors)) {
+            Response::json([
+                'error'   => 'Doğrulama hatası (Validation Failed)',
+                'message' => 'Gönderilen ilan verileri ddd.md iş kurallarına uymuyor.',
+                'errors'  => $errors
+            ], 422);
+            return;
+        }
+
         $job = JobPosting::create($data);
-        Response::json($job, 201);
+        Response::json([
+            'message' => 'İş ilanı başarıyla oluşturuldu.',
+            'data'    => $job
+        ], 201);
     }
 
     /**
@@ -68,6 +101,14 @@ class ApiJobController
      */
     public function show(string $id): void
     {
+        if (!is_numeric($id) || (int)$id <= 0) {
+            Response::json([
+                'error'   => 'Geçersiz parametre (Invalid ID)',
+                'message' => 'İlan ID değeri pozitif bir tamsayı olmalıdır.'
+            ], 400);
+            return;
+        }
+
         $job = JobPosting::find((int)$id);
 
         if (!$job) {
@@ -84,16 +125,55 @@ class ApiJobController
      */
     public function update(string $id): void
     {
-        $jobId = (int)$id;
-        $data = $this->getJsonInput();
+        if (!is_numeric($id) || (int)$id <= 0) {
+            Response::json([
+                'error'   => 'Geçersiz parametre (Invalid ID)',
+                'message' => 'İlan ID değeri pozitif bir tamsayı olmalıdır.'
+            ], 400);
+            return;
+        }
 
-        $updated = JobPosting::update($jobId, $data);
-        if (!$updated) {
+        $jobId = (int)$id;
+        $existing = JobPosting::find($jobId);
+        if (!$existing) {
             Response::json(['error' => 'İş ilanı bulunamadı (ID: ' . $id . ')'], 404);
             return;
         }
 
-        Response::json($updated, 200);
+        $raw = file_get_contents('php://input');
+        if (trim($raw) === '') {
+            Response::json([
+                'error' => 'Boş istek gövdesi',
+                'message' => 'Güncelleme için JSON formatında alanlar gönderilmelidir.'
+            ], 400);
+            return;
+        }
+
+        $data = json_decode($raw, true);
+        if ($data === null && json_last_error() !== JSON_ERROR_NONE) {
+            Response::json([
+                'error' => 'Geçersiz JSON sözdizimi',
+                'message' => json_last_error_msg()
+            ], 400);
+            return;
+        }
+
+        // Güncelleme validasyonu
+        $errors = JobPosting::validate($data, true);
+        if (!empty($errors)) {
+            Response::json([
+                'error'   => 'Doğrulama hatası (Validation Failed)',
+                'message' => 'Güncellenmek istenen veriler kurallara uymuyor.',
+                'errors'  => $errors
+            ], 422);
+            return;
+        }
+
+        $updated = JobPosting::update($jobId, $data);
+        Response::json([
+            'message' => 'İş ilanı başarıyla güncellendi.',
+            'data'    => $updated
+        ], 200);
     }
 
     /**

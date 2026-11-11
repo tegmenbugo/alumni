@@ -165,12 +165,12 @@
                     </div>
                     <div class="modal-body row g-3">
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold">Pozisyon Başlığı *</label>
-                            <input type="text" name="title" class="form-control" placeholder="Örn: Junior Backend Developer" required>
+                            <label class="form-label fw-semibold">Pozisyon Başlığı * (Maks 120 Karakter)</label>
+                            <input type="text" name="title" class="form-control" placeholder="Örn: Junior Backend Developer" maxlength="120" required>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold">Şirket Adı *</label>
-                            <input type="text" name="company_name" class="form-control" placeholder="Örn: Trendyol" required>
+                            <label class="form-label fw-semibold">Şirket Adı * (Maks 120 Karakter)</label>
+                            <input type="text" name="company_name" class="form-control" placeholder="Örn: Trendyol" maxlength="120" required>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label fw-semibold">Yayınlayan Mezun *</label>
@@ -187,8 +187,9 @@
                             <select name="employment_type" class="form-select">
                                 <option value="Tam Zamanlı">Tam Zamanlı</option>
                                 <option value="Yarı Zamanlı">Yarı Zamanlı</option>
-                                <option value="Stajyer">Stajyer</option>
+                                <option value="Staj">Staj</option>
                                 <option value="Sözleşmeli">Sözleşmeli</option>
+                                <option value="Freelance">Freelance</option>
                             </select>
                         </div>
                         <div class="col-md-3">
@@ -200,20 +201,20 @@
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold">Lokasyon</label>
-                            <input type="text" name="location" class="form-control" value="İstanbul / Hibrit">
+                            <label class="form-label fw-semibold">Şehir / Lokasyon (Opsiyonel)</label>
+                            <input type="text" name="location" class="form-control" placeholder="Örn: İstanbul, Türkiye" maxlength="100">
                         </div>
                         <div class="col-md-3">
                             <label class="form-label fw-semibold">Min Maaş (Opsiyonel)</label>
-                            <input type="number" name="salary_min" class="form-control" placeholder="45000">
+                            <input type="number" name="salary_min" class="form-control" placeholder="45000" min="0">
                         </div>
                         <div class="col-md-3">
                             <label class="form-label fw-semibold">Max Maaş (Opsiyonel)</label>
-                            <input type="number" name="salary_max" class="form-control" placeholder="65000">
+                            <input type="number" name="salary_max" class="form-control" placeholder="65000" min="0">
                         </div>
                         <div class="col-12">
-                            <label class="form-label fw-semibold">İş Tanımı & Sorumluluklar *</label>
-                            <textarea name="description" class="form-control" rows="3" placeholder="Pozisyon detayları..." required></textarea>
+                            <label class="form-label fw-semibold">İş Tanımı & Sorumluluklar (Opsiyonel)</label>
+                            <textarea name="description" class="form-control" rows="3" placeholder="Pozisyon detayları (Opsiyonel)..."></textarea>
                         </div>
                         <div class="col-12">
                             <label class="form-label fw-semibold">Aranan Nitelikler & Yetkinlikler</label>

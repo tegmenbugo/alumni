@@ -77,6 +77,122 @@ class JobPosting
     }
 
     // =========================================================================
+    // İŞ KURALLARI VE VALİDASYON (BUSINESS RULES & VALIDATION) - Hafta 07
+    // =========================================================================
+
+    /**
+     * İlan verilerini ddd.md iş kurallarına göre doğrular.
+     * Hata varsa ['field' => 'Hata mesajı'] şeklinde döner, geçerliyse boş array döner.
+     *
+     * Kurallar:
+     *  - title: Zorunlu, min 3, maks 120 karakter.
+     *  - company / company_name: Zorunlu, maks 120 karakter.
+     *  - city / location: Opsiyonel, maks 100 karakter.
+     *  - description: Opsiyonel.
+     *  - salary: salary_min >= 0, salary_max >= 0 ve salary_min <= salary_max.
+     *  - contact_email: Opsiyonel, girildiyse geçerli email formatı.
+     *  - employment_type: Geçerli enum listesinde olmalı.
+     *  - workplace_type: Geçerli enum listesinde olmalı.
+     *  - status: ['active', 'closed', 'draft', 'archived'].
+     *  - deadline: Opsiyonel, girildiyse YYYY-MM-DD ve geçmiş tarih olamaz.
+     */
+    public static function validate(array $data, bool $isUpdate = false): array
+    {
+        $errors = [];
+
+        // 1. title: required, max 120 chars
+        if (!$isUpdate || array_key_exists('title', $data)) {
+            $title = trim($data['title'] ?? '');
+            if ($title === '') {
+                $errors['title'] = 'İlan başlığı (title) zorunludur.';
+            } elseif (mb_strlen($title) < 3) {
+                $errors['title'] = 'İlan başlığı (title) en az 3 karakter olmalıdır.';
+            } elseif (mb_strlen($title) > 120) {
+                $errors['title'] = 'İlan başlığı (title) en fazla 120 karakter olabilir. (Girilen: ' . mb_strlen($title) . ')';
+            }
+        }
+
+        // 2. company / company_name: required, max 120 chars
+        if (!$isUpdate || array_key_exists('company_name', $data) || array_key_exists('company', $data)) {
+            $company = trim($data['company_name'] ?? ($data['company'] ?? ''));
+            if ($company === '') {
+                $errors['company_name'] = 'Şirket / kurum adı (company_name) zorunludur.';
+            } elseif (mb_strlen($company) > 120) {
+                $errors['company_name'] = 'Şirket adı en fazla 120 karakter olabilir. (Girilen: ' . mb_strlen($company) . ')';
+            }
+        }
+
+        // 3. city / location: optional, max 100 chars
+        $location = $data['location'] ?? ($data['city'] ?? null);
+        if ($location !== null && trim($location) !== '') {
+            if (mb_strlen(trim($location)) > 100) {
+                $errors['location'] = 'Şehir / lokasyon bilgisi en fazla 100 karakter olabilir.';
+            }
+        }
+
+        // 4. description: optional (boş bırakılabilir)
+        // Kural: description opsiyoneldir.
+
+        // 5. salary_min & salary_max mantıksal kontrolü (Sistem Kuralı)
+        $hasMin = isset($data['salary_min']) && $data['salary_min'] !== '' && $data['salary_min'] !== null;
+        $hasMax = isset($data['salary_max']) && $data['salary_max'] !== '' && $data['salary_max'] !== null;
+
+        if ($hasMin && (float)$data['salary_min'] < 0) {
+            $errors['salary_min'] = 'Asgari maaş (salary_min) 0 veya pozitif bir değer olmalıdır.';
+        }
+        if ($hasMax && (float)$data['salary_max'] < 0) {
+            $errors['salary_max'] = 'Azami maaş (salary_max) 0 veya pozitif bir değer olmalıdır.';
+        }
+        if ($hasMin && $hasMax && (float)$data['salary_min'] > (float)$data['salary_max']) {
+            $errors['salary_range'] = 'Asgari maaş (salary_min), azami maaştan (salary_max) büyük olamaz.';
+        }
+
+        // 6. contact_email kontrolü (Sistem Kuralı)
+        if (!empty($data['contact_email'])) {
+            if (!filter_var($data['contact_email'], FILTER_VALIDATE_EMAIL)) {
+                $errors['contact_email'] = 'İletişim e-posta adresi (contact_email) geçerli bir e-posta formatında olmalıdır.';
+            }
+        }
+
+        // 7. application_url kontrolü (Sistem Kuralı)
+        if (!empty($data['application_url'])) {
+            if (!filter_var($data['application_url'], FILTER_VALIDATE_URL)) {
+                $errors['application_url'] = 'Başvuru bağlantısı (application_url) geçerli bir URL formatında olmalıdır (örn: https://...).';
+            }
+        }
+
+        // 8. employment_type enum kontrolü
+        $allowedEmployment = ['Tam Zamanlı', 'Yarı Zamanlı', 'Staj', 'Sözleşmeli', 'Freelance'];
+        if (!empty($data['employment_type']) && !in_array($data['employment_type'], $allowedEmployment, true)) {
+            $errors['employment_type'] = 'Geçersiz çalışma biçimi. İzin verilenler: ' . implode(', ', $allowedEmployment);
+        }
+
+        // 9. workplace_type enum kontrolü
+        $allowedWorkplace = ['Ofisten', 'Hibrit', 'Uzaktan / Remote'];
+        if (!empty($data['workplace_type']) && !in_array($data['workplace_type'], $allowedWorkplace, true)) {
+            $errors['workplace_type'] = 'Geçersiz çalışma ortamı. İzin verilenler: ' . implode(', ', $allowedWorkplace);
+        }
+
+        // 10. status enum kontrolü
+        $allowedStatus = ['active', 'closed', 'draft', 'archived'];
+        if (!empty($data['status']) && !in_array($data['status'], $allowedStatus, true)) {
+            $errors['status'] = 'Geçersiz ilan durumu. İzin verilenler: ' . implode(', ', $allowedStatus);
+        }
+
+        // 11. deadline tarih kontrolü
+        if (!empty($data['deadline'])) {
+            $deadlineTime = strtotime($data['deadline']);
+            if ($deadlineTime === false) {
+                $errors['deadline'] = 'Son başvuru tarihi geçerli bir tarih formatında (YYYY-MM-DD) olmalıdır.';
+            } elseif (date('Y-m-d', $deadlineTime) < date('Y-m-d')) {
+                $errors['deadline'] = 'Son başvuru tarihi geçmiş bir tarih olamaz.';
+            }
+        }
+
+        return $errors;
+    }
+
+    // =========================================================================
     // CRUD VE SORGULAMA METODLARI
     // =========================================================================
 
@@ -168,17 +284,17 @@ class JobPosting
         ");
 
         $stmt->execute([
-            ':posted_by_user_id' => (int)$data['posted_by_user_id'],
+            ':posted_by_user_id' => (int)($data['posted_by_user_id'] ?? 1),
             ':title'              => trim($data['title']),
-            ':company_name'       => trim($data['company_name']),
+            ':company_name'       => trim($data['company_name'] ?? ($data['company'] ?? '')),
             ':employment_type'    => $data['employment_type'] ?? 'Tam Zamanlı',
             ':workplace_type'     => $data['workplace_type'] ?? 'Hibrit',
-            ':location'           => $data['location'] ?? 'İstanbul, Türkiye',
+            ':location'           => $data['location'] ?? ($data['city'] ?? 'İstanbul, Türkiye'),
             ':experience_level'   => $data['experience_level'] ?? 'Giriş Seviyesi',
             ':salary_min'         => !empty($data['salary_min']) ? (float)$data['salary_min'] : null,
             ':salary_max'         => !empty($data['salary_max']) ? (float)$data['salary_max'] : null,
             ':salary_currency'    => $data['salary_currency'] ?? 'TRY',
-            ':description'        => trim($data['description']),
+            ':description'        => isset($data['description']) ? trim($data['description']) : null,
             ':requirements'       => $data['requirements'] ?? null,
             ':contact_email'      => $data['contact_email'] ?? null,
             ':application_url'    => $data['application_url'] ?? null,

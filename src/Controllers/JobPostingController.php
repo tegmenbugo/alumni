@@ -69,24 +69,26 @@ class JobPostingController
      */
     public function store(): void
     {
-        $title = trim($_POST['title'] ?? '');
-        $company = trim($_POST['company_name'] ?? '');
-        $userId = !empty($_POST['posted_by_user_id']) ? (int)$_POST['posted_by_user_id'] : 1;
-
+        $errors = JobPosting::validate($_POST);
         $message = null;
-        if (!empty($title) && !empty($company)) {
+
+        if (empty($errors)) {
+            $userId = !empty($_POST['posted_by_user_id']) ? (int)$_POST['posted_by_user_id'] : 1;
+            $title = trim($_POST['title']);
+            $company = trim($_POST['company_name'] ?? ($_POST['company'] ?? ''));
+
             JobPosting::create([
                 'posted_by_user_id' => $userId,
                 'title'              => $title,
                 'company_name'       => $company,
                 'employment_type'    => $_POST['employment_type'] ?? 'Tam Zamanlı',
                 'workplace_type'     => $_POST['workplace_type'] ?? 'Hibrit',
-                'location'           => $_POST['location'] ?? 'İstanbul, Türkiye',
+                'location'           => $_POST['location'] ?? ($_POST['city'] ?? 'İstanbul, Türkiye'),
                 'experience_level'   => $_POST['experience_level'] ?? 'Giriş Seviyesi',
                 'salary_min'         => !empty($_POST['salary_min']) ? (float)$_POST['salary_min'] : null,
                 'salary_max'         => !empty($_POST['salary_max']) ? (float)$_POST['salary_max'] : null,
                 'salary_currency'    => $_POST['salary_currency'] ?? 'TRY',
-                'description'        => trim($_POST['description'] ?? 'Detaylı ilan açıklaması.'),
+                'description'        => !empty($_POST['description']) ? trim($_POST['description']) : null,
                 'requirements'       => trim($_POST['requirements'] ?? ''),
                 'contact_email'      => trim($_POST['contact_email'] ?? ''),
                 'application_url'    => trim($_POST['application_url'] ?? ''),
@@ -94,6 +96,8 @@ class JobPostingController
                 'deadline'           => !empty($_POST['deadline']) ? $_POST['deadline'] : null
             ]);
             $message = "🎉 '{$title}' ({$company}) ilanı başarıyla yayınlandı!";
+        } else {
+            $message = "⚠️ İlan oluşturulamadı: " . implode(' | ', $errors);
         }
 
         $jobs = JobPosting::all();
@@ -105,7 +109,8 @@ class JobPostingController
             'users'     => $users,
             'totalJobs' => $totalJobs,
             'filters'   => [],
-            'message'   => $message
+            'message'   => $message,
+            'errors'    => $errors
         ]);
     }
 

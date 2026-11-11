@@ -241,28 +241,28 @@ Mezunların sahip olduğu teknik ve sektörel yetenekleri N:M ilişki ile harita
 | `user_skills` | `skill_id` | `INTEGER` | FK (`skills.id`), NOT NULL | İlgili yetenek |
 | `user_skills` | `proficiency` | `VARCHAR(30)` | DEFAULT `'Orta'` | Seviye (`Başlangıç`, `Orta`, `İleri`, `Uzman`) |
 
-### 4.6. `job_postings` Tablosu (Kariyer ve İş/Staj İlanları - Hafta 06 Güncellemesi)
-Mezunların, partner şirketlerin veya kurum temsilcilerinin açtığı iş/staj ilanlarını ve aday kriterlerini yönetir.
+### 4.6. `job_postings` Tablosu (Kariyer ve İş/Staj İlanları - Hafta 06 & 07 Güncellemesi)
+Mezunların, partner şirketlerin veya kurum temsilcilerinin açtığı iş/staj ilanlarını ve aday kriterlerini yönetir. Hafta 07 iş kuralları (validation rules) ile sınırlandırılmıştır.
 
 | Sütun Adı | Veri Tipi | Kısıtlamalar (Constraints) | Varsayılan | Açıklama |
 | :--- | :--- | :--- | :--- | :--- |
 | `id` | `INTEGER` | PRIMARY KEY, AUTOINCREMENT | - | Benzersiz ilan numarası |
 | `posted_by_user_id` | `INTEGER` | FK (`users.id`), NOT NULL | - | İlanı oluşturan mezun / kullanıcı referansı |
-| `title` | `VARCHAR(150)` | NOT NULL | - | İlan pozisyon başlığı (Örn: `Junior PHP Developer`) |
-| `company_name` | `VARCHAR(150)` | NOT NULL | - | İstihdam sağlayan şirket / kurum adı |
+| `title` | `VARCHAR(120)` | NOT NULL, CHECK (length <= 120) | - | **Zorunlu**, Maksimum 120 karakter ilan pozisyon başlığı |
+| `company_name` | `VARCHAR(120)` | NOT NULL, CHECK (length <= 120) | - | **Zorunlu**, Maksimum 120 karakter şirket / kurum adı |
 | `employment_type` | `VARCHAR(50)` | NOT NULL | `'Tam Zamanlı'` | Çalışma biçimi (`Tam Zamanlı`, `Yarı Zamanlı`, `Staj`, `Sözleşmeli`, `Freelance`) |
 | `workplace_type` | `VARCHAR(50)` | NOT NULL | `'Hibrit'` | Çalışma ortamı modeli (`Ofisten`, `Hibrit`, `Uzaktan / Remote`) |
-| `location` | `VARCHAR(100)` | NULL | `'İstanbul, Türkiye'` | Şehir / Ülke lokasyon bilgisi |
+| `location` | `VARCHAR(100)` | NULL (Opsiyonel) | `'İstanbul, Türkiye'` | **Opsiyonel (City/Location)**, Şehir / Ülke bilgisi (Maks 100 karakter) |
 | `experience_level` | `VARCHAR(50)` | NOT NULL | `'Giriş Seviyesi'` | Deneyim seviyesi (`Stajyer`, `Giriş Seviyesi`, `Orta Seviye`, `Kıdemli`) |
-| `salary_min` | `DECIMAL(10,2)` | NULL | `NULL` | Asgari maaş skalası |
-| `salary_max` | `DECIMAL(10,2)` | NULL | `NULL` | Azami maaş skalası |
+| `salary_min` | `DECIMAL(10,2)` | NULL, CHECK (salary_min >= 0) | `NULL` | Asgari maaş skalası (Negatif olamaz) |
+| `salary_max` | `DECIMAL(10,2)` | NULL, CHECK (salary_max >= salary_min) | `NULL` | Azami maaş skalası (`salary_min <= salary_max`) |
 | `salary_currency` | `VARCHAR(10)` | DEFAULT `'TRY'` | `'TRY'` | Maaş para birimi (`TRY`, `USD`, `EUR`) |
-| `description` | `TEXT` | NOT NULL | - | Detaylı rol tanımı, sorumluluklar ve şirket tanıtımı |
-| `requirements` | `TEXT` | NULL | `NULL` | Aranan teknik/sosyal nitelikler ve yetkinlikler |
-| `contact_email` | `VARCHAR(191)` | NULL | `NULL` | Başvuru ve soru iletişim e-postası |
-| `application_url` | `VARCHAR(255)` | NULL | `NULL` | Harici başvuru bağlantısı (LinkedIn, Kariyer.net vb.) |
+| `description` | `TEXT` | NULL (Opsiyonel) | `NULL` | **Opsiyonel (Description)**, Detaylı rol tanımı ve tanıtım |
+| `requirements` | `TEXT` | NULL (Opsiyonel) | `NULL` | Aranan teknik/sosyal nitelikler ve yetkinlikler |
+| `contact_email` | `VARCHAR(191)` | NULL (Opsiyonel) | `NULL` | Geçerli e-posta formatı (RFC 5322) |
+| `application_url` | `VARCHAR(255)` | NULL (Opsiyonel) | `NULL` | Geçerli URL formatı (`https://...`) |
 | `status` | `VARCHAR(30)` | NOT NULL | `'active'` | İlan durumu (`active`, `closed`, `draft`, `archived`) |
-| `deadline` | `DATE` | NULL | `NULL` | İlan son başvuru tarihi |
+| `deadline` | `DATE` | NULL, CHECK (deadline >= CURRENT_DATE) | `NULL` | İlan son başvuru tarihi (Geçmiş tarih olamaz) |
 | `created_at` | `DATETIME` | NOT NULL | `CURRENT_TIMESTAMP` | İlanın oluşturulma tarihi |
 | `updated_at` | `DATETIME` | NULL | `CURRENT_TIMESTAMP` | İlanın son güncellenme tarihi |
 
@@ -375,20 +375,20 @@ CREATE TABLE IF NOT EXISTS user_skills (
     UNIQUE(user_id, skill_id)
 );
 
--- 6. JOB_POSTINGS & JOB_APPLICATIONS TABLOLARI (Kariyer Fırsatları - Hafta 06)
+-- 6. JOB_POSTINGS & JOB_APPLICATIONS TABLOLARI (Kariyer Fırsatları - Hafta 06 & 07 İş Kuralları)
 CREATE TABLE IF NOT EXISTS job_postings (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     posted_by_user_id INTEGER NOT NULL,
-    title VARCHAR(150) NOT NULL,
-    company_name VARCHAR(150) NOT NULL,
+    title VARCHAR(120) NOT NULL CHECK(length(title) <= 120),
+    company_name VARCHAR(120) NOT NULL CHECK(length(company_name) <= 120),
     employment_type VARCHAR(50) DEFAULT 'Tam Zamanlı',
     workplace_type VARCHAR(50) DEFAULT 'Hibrit',
     location VARCHAR(100) DEFAULT 'İstanbul, Türkiye',
     experience_level VARCHAR(50) DEFAULT 'Giriş Seviyesi',
-    salary_min DECIMAL(10,2),
-    salary_max DECIMAL(10,2),
+    salary_min DECIMAL(10,2) CHECK(salary_min IS NULL OR salary_min >= 0),
+    salary_max DECIMAL(10,2) CHECK(salary_max IS NULL OR salary_min IS NULL OR salary_max >= salary_min),
     salary_currency VARCHAR(10) DEFAULT 'TRY',
-    description TEXT NOT NULL,
+    description TEXT,
     requirements TEXT,
     contact_email VARCHAR(191),
     application_url VARCHAR(255),
@@ -588,6 +588,61 @@ Sistemin veriyi unutmadığını test etmek için aşağıdaki 4 adım izlenir:
 2. **ACID İşlem Güvenliği:** SQLite veritabanı motoru varsayılan olarak atomik yazma (atomic commits) ve WAL (Write-Ahead Logging) modunu destekler.
 3. **Girdi Doğrulama (Sanitization & Validation):** Web ve API denetleyicileri (`UserController` ve `ApiUserController`), boş alanları, geçersiz e-postaları ve mezuniyet yılı aralıklarını (1950 - 2040) model seviyesinde filtreler.
 4. **Çapraz Site Betik Koruması (XSS):** Tüm View katmanlarında (`views/users/*.php`) veriler ekrana basılırken `htmlspecialchars($val, ENT_QUOTES, 'UTF-8')` süzgecinden geçirilir.
+
+---
+
+## 📋 9. Sistem İş Kuralları ve Doğrulama Sözleşmesi (Business Rules & Validation Contract - Hafta 07)
+
+Doç. Dr. Emre Akadal'ın Hafta 07 standartları gereğince, sistemin veri bütünlüğünü ve kararlılığını sağlamak üzere hem veritabanı (DDL constraints) hem de uygulama katmanında (`App\Models\JobPosting::validate` ve `ApiJobController`) denetlenen kurallar aşağıda tanımlanmıştır.
+
+### 9.1. `JobPosting` (İş/Staj İlanı) Temel Kuralları (Hoca Direktifi)
+* **`title` (İlan Başlığı):**
+  * **Zorunluluk:** `REQUIRED` (Boş bırakılamaz, `null` olamaz, sadece boşluklardan oluşamaz).
+  * **Uzunluk:** Minimum 3 karakter, **en fazla 120 karakter** (`max 120 characters`). 120 karakteri aşan istekler reddedilir.
+* **`company_name` / `company` (Şirket/Kurum Adı):**
+  * **Zorunluluk:** `REQUIRED` (Zorunludur).
+  * **Uzunluk:** Minimum 2 karakter, **en fazla 120 karakter** (`max 120 characters`).
+* **`location` / `city` (Şehir/Lokasyon):**
+  * **Zorunluluk:** `OPTIONAL` (Opsiyoneldir). Girilmediğinde varsayılan olarak `'İstanbul, Türkiye'` atanır.
+  * **Uzunluk:** Girilmişse en fazla 100 karakter olabilir.
+* **`description` (İlan Açıklaması):**
+  * **Zorunluluk:** `OPTIONAL` (Opsiyoneldir). Boş bırakılabilir veya sonradan doldurulabilir.
+
+### 9.2. `JobPosting` İçin Eklediğimiz Sistem Kuralları (Domain Specific Invariants)
+Sistemin kurumsal ciddiyetini ve veri kalitesini korumak amacıyla geliştirdiğimiz ek iş kuralları:
+1. **İlan Sahibi Bütünlüğü (`posted_by_user_id`):** İlanı açan kullanıcı ID'si veritabanında (`users`) kayıtlı ve aktif bir kullanıcı olmalıdır. Hayali veya silinmiş ID ile ilan açılamaz.
+2. **Maaş Skalası Mantıksal Tutarlılığı (`salary_min` & `salary_max`):**
+   * Maaş değerleri negatif olamaz (`salary_min >= 0` ve `salary_max >= 0`).
+   * Her iki alan da girilmişse, **Asgari maaş azami maaştan büyük olamaz** (`salary_min <= salary_max`). Mantık hatası içeren istekler HTTP 422 ile reddedilir.
+3. **Para Birimi Kısıtı (`salary_currency`):** Yalnızca geçerli para birimleri kabul edilir: `TRY`, `USD`, `EUR`.
+4. **İletişim E-Postası Doğrulaması (`contact_email`):** Opsiyoneldir; ancak girilmişse RFC 5322 standardına uygun geçerli bir e-posta formatı (`filter_var(..., FILTER_VALIDATE_EMAIL)`) olmalıdır.
+5. **Harici Başvuru Bağlantısı (`application_url`):** Opsiyoneldir; girilmişse `http://` veya `https://` protokolüne sahip geçerli bir URL olmalıdır.
+6. **Çalışma Biçimi Enum Denetimi (`employment_type`):** Yalnızca izin verilen türler seçilebilir: `['Tam Zamanlı', 'Yarı Zamanlı', 'Staj', 'Sözleşmeli', 'Freelance']`.
+7. **Çalışma Ortamı Enum Denetimi (`workplace_type`):** Yalnızca: `['Ofisten', 'Hibrit', 'Uzaktan / Remote']`.
+8. **İlan Statüsü (`status`):** Yalnızca: `['active', 'closed', 'draft', 'archived']`.
+9. **Son Başvuru Tarihi (`deadline`):** Opsiyoneldir; girilmişse `YYYY-MM-DD` biçiminde olmalı ve **geçmiş bir tarih olamaz** (`deadline >= CURRENT_DATE`).
+
+### 9.3. `JobApplication` (Başvuru) İş Kuralları
+1. **Aktif İlan Kuralı:** Yalnızca statüsü `active` olan iş ilanlarına başvuru yapılabilir. Kapanmış (`closed`) veya arşivlenmiş ilanlara gelen başvurular HTTP 400 ile engellenir.
+2. **Mükerrer Başvuru Yasağı (Duplicate Protection):** Bir mezun/öğrenci, aynı ilana birden fazla başvuru yapamaz (`UNIQUE(job_posting_id, applicant_user_id)`). Tekrarlanan başvurular HTTP 409 Conflict döner.
+3. **CV & Portfolyo Bağlantıları (`resume_url`, `portfolio_url`):** Opsiyoneldir; girilmişse geçerli URL formatında olmalıdır.
+4. **Statü Yaşam Döngüsü (`status`):** Başvuru ilk oluştuğunda `'applied'` durumundadır. Geçişler yalnızca: `['applied', 'reviewing', 'interview', 'accepted', 'rejected', 'withdrawn']`.
+
+### 9.4. Postman Geçersiz İstekler ve Hata Kodları Matrisi (Postman Invalid Requests Matrix)
+API uç noktalarına gönderilen geçersiz isteklere sistemin verdiği standart HTTP yanıtları:
+
+| Senaryo / Geçersiz İstek | Gönderilen Hatalı Payload / URL | Beklenen HTTP Kodu | Dönen Hata Alanı / Mesajı |
+| :--- | :--- | :---: | :--- |
+| **1. Başlık Eksik (Title Missing)** | `{"company_name": "Getir"}` | `422 Unprocessable` | `"title": "İlan başlığı (title) zorunludur."` |
+| **2. Başlık 120 Karakteri Aşıyor** | `{"title": "Çok Uzun Başlık (121+ karakter)...", "company_name": "Trendyol"}` | `422 Unprocessable` | `"title": "İlan başlığı (title) en fazla 120 karakter olabilir."` |
+| **3. Şirket Adı Eksik (Company Missing)** | `{"title": "Backend Dev"}` | `422 Unprocessable` | `"company_name": "Şirket / kurum adı (company_name) zorunludur."` |
+| **4. Mantıksız Maaş Aralığı (Min > Max)** | `{"title": "Dev", "company_name": "A", "salary_min": 90000, "salary_max": 50000}` | `422 Unprocessable` | `"salary_range": "Asgari maaş (salary_min), azami maaştan (salary_max) büyük olamaz."` |
+| **5. Negatif Maaş Girişi** | `{"title": "Dev", "company_name": "A", "salary_min": -500}` | `422 Unprocessable` | `"salary_min": "Asgari maaş (salary_min) 0 veya pozitif bir değer olmalıdır."` |
+| **6. Geçersiz E-Posta Formatı** | `{"title": "Dev", "company_name": "A", "contact_email": "gecersiz-email"}` | `422 Unprocessable` | `"contact_email": "İletişim e-posta adresi geçerli formatta olmalıdır."` |
+| **7. Geçersiz Çalışma Tipi (Enum)** | `{"title": "Dev", "company_name": "A", "employment_type": "Uzayda Çalışma"}` | `422 Unprocessable` | `"employment_type": "Geçersiz çalışma biçimi."` |
+| **8. Geçmiş Son Başvuru Tarihi** | `{"title": "Dev", "company_name": "A", "deadline": "2020-01-01"}` | `422 Unprocessable` | `"deadline": "Son başvuru tarihi geçmiş bir tarih olamaz."` |
+| **9. Geçersiz / Boş JSON Gövdesi** | `{ invalid_json... }` veya boş body | `400 Bad Request` | `"error": "Geçersiz JSON sözdizimi"` veya `"Boş istek gövdesi"` |
+| **10. Olmayan İlan ID'si (GET/PUT/DELETE)** | `GET /api/jobs/99999` veya `GET /api/jobs/abc` | `404 Not Found` / `400 Bad Request` | `"error": "İş ilanı bulunamadı (ID: 99999)"` |
 
 ---
 
