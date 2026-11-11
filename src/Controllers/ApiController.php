@@ -137,6 +137,15 @@ class ApiController
                         ]
                     ]
                 ],
+                '/404' => [
+                    'get' => [
+                        'tags'      => ['System'],
+                        'summary'   => 'Generic 404 Sayfası ve Yönlendirme Ekranı (ErrorController::notFound)',
+                        'responses' => [
+                            '404' => ['description' => 'Generic 404 HTML sayfası render edilir']
+                        ]
+                    ]
+                ],
                 '/api/users' => [
                     'get' => [
                         'tags'      => ['ApiUserController'],

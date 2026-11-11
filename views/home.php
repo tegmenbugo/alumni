@@ -177,6 +177,27 @@
                                     <td><code>HomeController::about()</code></td>
                                     <td class="text-center"><a href="/about" class="btn btn-sm btn-outline-secondary" target="_blank">Aç ↗</a></td>
                                 </tr>
+                                <tr>
+                                    <td><span class="badge bg-warning text-dark">Hafta 07</span></td>
+                                    <td><span class="badge bg-success">GET</span></td>
+                                    <td><span class="endpoint-badge">/404</span></td>
+                                    <td><code>ErrorController::notFound()</code> (Generic 404 & Redirect)</td>
+                                    <td class="text-center"><a href="/404" class="btn btn-sm btn-outline-warning">Sayfayı Gör ➔</a></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="badge bg-warning text-dark">Hafta 07</span></td>
+                                    <td><span class="badge bg-danger">404 Test</span></td>
+                                    <td><span class="endpoint-badge">/gecersiz-istek</span></td>
+                                    <td><code>NotFoundGuardianMiddleware</code> (Otomatik 404 Redirect Testi)</td>
+                                    <td class="text-center"><a href="/gecersiz-istek" class="btn btn-sm btn-outline-danger">Test Et ➔</a></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="badge bg-warning text-dark">Hafta 07</span></td>
+                                    <td><span class="badge bg-danger">500 Test</span></td>
+                                    <td><span class="endpoint-badge">/api/test-500</span></td>
+                                    <td><code>ServerErrorGuardianMiddleware</code> (5xx Guardian & Log Testi)</td>
+                                    <td class="text-center"><a href="/api/test-500" class="btn btn-sm btn-outline-danger" target="_blank">500 Test Et ↗</a></td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>

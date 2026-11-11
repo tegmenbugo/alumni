@@ -138,12 +138,15 @@ alumni/
 │       ├── ApiJobController.php        # [REST API Controller] Doğrudan ve iç içe ilan API'leri (/api/jobs)
 │       ├── ApiApplicationController.php# [REST API Controller] Doğrudan başvuru API'leri (/api/applications)
 │       ├── HomeController.php          # Web sayfaları (/, /hello, /sum, /about, /Alumni)
+│       ├── ErrorController.php         # [Hata Yöneticisi - Hafta 07] Generic 404 ekranı ve yönlendirme (/404)
 │       └── ApiController.php           # Sistem sağlığı (/api/health), Migrasyonlar (/api/migrations), /api/test-500 ve Swagger
 │
 ├── views/                              # [VIEW KATMANI (V)]
 │   ├── home.php                        # Ana kontrol paneli ve uç nokta test arayüzü
 │   ├── about.php                       # Proje hakkında sayfası
 │   ├── swagger.php                     # Swagger UI canlı dokümantasyon sayfası
+│   ├── errors/                         # [HATA ŞABLONLARI - Hafta 07 (Görev 7)]
+│   │   └── 404.php                     # Generic 404 sayfası ve otomatik geri sayımlı redirect
 │   ├── users/                          # Mezun web arayüz şablonları (index, show, edit)
 │   └── jobs/                           # [Hafta 06 UI] İlan portalı ve detay/başvuru ekranları (index, show)
 │
@@ -279,6 +282,49 @@ Docker mimarisinde konteynerlar kapatılıp yok edildiğinde (`docker compose do
 
 ---
 
+## 🛡️ Hafta 07: İş Kuralları, Ara Katmanlar (Middlewares), Hata Bekçileri (Guardians) ve Loglama
+
+Dersin 7. haftasında sistem güvenliği, veri doğruluğu, gözlemlenebilirlik ve kullanıcı deneyimi için 7 temel görev hayata geçirilmiştir:
+
+### 1. `JobPosting` İş Kuralları & Validasyon Sözleşmesi (`ddd.md` Bölüm 9)
+* **`title`:** Zorunlu, minimum 3, **maksimum 120 karakter** (`CHECK length <= 120`).
+* **`company_name`:** Zorunlu, **maksimum 120 karakter**.
+* **`location` / `city`:** Opsiyonel (Varsayılan: `'İstanbul, Türkiye'`).
+* **`description`:** Opsiyonel.
+* **Maaş Skalası Kuralı:** Negatif maaş engeli (`>= 0`) ve `salary_min <= salary_max` mantıksal tutarlılığı.
+* **İletişim & URL:** RFC 5322 e-posta doğrulaması ve geçerli URL protokol kısıtı.
+* **Postman Geçersiz İstekler:** Kurallara uymayan istekler standart `HTTP 422 Unprocessable Content` veya `HTTP 400 Bad Request` yanıtları döner.
+
+### 2. `LoggerMiddleware` (Terminal & Dosya Kaydı)
+* İstemciden gelen ilk anda tetiklenir ve istek bitiminde süreyi (`microtime`) hesaplar.
+* **Terminal Çıktısı (Format):**
+  ```text
+  time 10.20.39 method:POST route:/user response type : 201 duration :18.4ms
+  ```
+* **Kalıcı Dosyalar:**
+  * `logs/requests.log`: Tüm isteklerin IP, metot ve süre dökümü.
+  * `logs/error.logs`: HTTP 4xx ve 5xx hatalarının dökümü.
+
+### 3. `NotFoundGuardianMiddleware` (404 Guardian)
+* Kuru bir 404 yerine hatanın **somut gerekçesini (reason)** tespit eder:
+  * **Metot Uyuşmazlığı:** Yol var fakat HTTP metodu desteklenmiyorsa izin verilen metotları bildirir.
+  * **Yazım Hatası (Typo):** Levenshtein algoritmasıyla en yakın geçerli rotaları önerir.
+* API istekleri için yapılandırılmış JSON döner.
+* Hata detayını `logs/error.logs` dosyasına yazar.
+
+### 4. `ServerErrorGuardianMiddleware` (5xx Guardian)
+* 500'lü tüm sunucu çökmelerini, veritabanı kesintilerini ve fatal PHP hatalarını yakalar.
+* Sistem sırlarını sızdırmadan güvenli gerekçe (`reason`) ve benzersiz takip numarası (`error_id`, örn: `ERR-A1B2C3D4`) döner.
+* Hatanın tüm çağrı yığınını (stack trace) `logs/error.logs` dosyasına arşivler.
+* `GET /api/test-500` rotası üzerinden anında simüle edilebilir.
+
+### 5. Generic 404 Sayfası ve Yönlendirme (Redirect Invalid Request - Görev 7)
+* **Merkezi Hata Ekranı:** [`views/errors/404.php`](file:///Users/bugrakaratas/Desktop/Alumni/views/errors/404.php) ve [`ErrorController::notFound()`](file:///Users/bugrakaratas/Desktop/Alumni/src/Controllers/ErrorController.php) (`GET /404`).
+* **Otomatik Yönlendirme:** Geçersiz bir web sayfasına girildiğinde sistem kullanıcıyı doğrudan `/404?from=...` sayfasına **yönlendirir (redirect)**.
+* Generic 404 ekranında 6 saniyelik görsel geri sayım sayacı çalışır ve kullanıcıyı otomatik olarak **Ana Sayfa'ya (`/`)** yönlendirir.
+
+---
+
 ## 🗓️ Dönem Yol Haritası (Fourteen Weeks Roadmap)
 
 * [x] **Week 01:** Project inception & fundamentals, repository setup, stack selection & justification.
@@ -287,7 +333,7 @@ Docker mimarisinde konteynerlar kapatılıp yok edildiğinde (`docker compose do
 * [x] **Week 04:** MVC architecture (Decoupled Front Controller, Router, Controllers [UserController & ApiUserController], Models [PDO User], Views, and synchronized Swagger UI).
 * [x] **Week 05:** Database & ORM — Data Design Documentation (`ddd.md`), Docker Compose Database Service (`db`), Environment Variables (`.env` vs `.example.env`), Migration Engine (`migrate.php`), and passing "The Forgetting Test".
 * [x] **Week 06:** Database integration & multi-table relationships — Updated `job_postings` table in `ddd.md`, created `008_update_job_postings_table.sql` migration (pending/unmigrated), and implemented `JobPosting` & `JobApplication` relational models with `User` relationships.
-* [x] **Week 07:** Business Rules, Validation Contract, Logger Middleware, 404 & 5xx Guardians and Persistent File Logging — Defined JobPosting validation rules in `ddd.md` Section 9 (title required max 120, company required max 120, city/description optional, salary bounds, email/URL/enum checks); implemented `LoggerMiddleware` (logging `time, method, route, response type, duration` to terminal and persistent logging to `logs/error.logs` & `logs/requests.log`), `NotFoundGuardianMiddleware` (reasoned 404 with suggestions) and `ServerErrorGuardianMiddleware` (5xx Guardian with incident tracking ID & stack trace archival).
+* [x] **Week 07:** Business Rules, Validation Contract, Logger Middleware, 404 & 5xx Guardians, Persistent File Logging (`logs/error.logs`), Generic 404 Page & Invalid Request Redirect — Full implementation of all Week 07 instructor requirements.
 * [ ] **Week 08:** Midterm — code review.
 * [ ] **Week 09:** Middleware — the bouncer.
 * [ ] **Week 10:** Views & front-end integration.

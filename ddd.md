@@ -672,6 +672,12 @@ Sistem mimarisine sunucu kararlılığını ve hata izlenebilirliğini sağlayan
    * **Derinlemesine Loglama:** Hatanın sınıfını, sebebini, kaynak dosyasını, satırını ve tam çağrı yığınını (stack trace) `logs/error.logs` dosyasına arşivler.
    * **Test Uç Noktası:** `GET /api/test-500` rotası üzerinden 5xx Guardian'ın devreye girişi anında test edilebilir.
 
+4. **Generic 404 Sayfası ve Geçersiz İstek Yönlendirmesi (Redirect Invalid Request - Görev 7):**
+   * **Merkezi Hata Görünümü:** `views/errors/404.php` ve `App\Controllers\ErrorController::notFound` (`GET /404`).
+   * **Yönlendirme Protokolü:** Sistemde tanımlı olmayan bir web rotasına istek geldiğinde, `NotFoundGuardianMiddleware` kullanıcıyı doğrudan `/404?from={path}&reason={reason}` adresine yönlendirir (HTTP 302 Redirect).
+   * **Otomatik Geri Dönüş:** Generic 404 ekranında 6 saniyelik geri sayım sayacı çalışır ve kullanıcıyı otomatik olarak Ana Sayfa'ya (`/`) yönlendirir (kullanıcı isterse yönlendirmeyi butonla durdurabilir).
+   * **API Ayrımı:** REST API uç noktaları (`/api/*`) redirect edilmez; doğrudan yapılandırılmış JSON 404 hata nesnesi döner.
+
 ---
 
 ## ⚙️ 10. Otomatik Migrasyon Motoru ve CLI Koşucu (Migration Engine)

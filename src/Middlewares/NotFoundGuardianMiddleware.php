@@ -53,9 +53,9 @@ class NotFoundGuardianMiddleware
             return;
         }
 
-        // Web Arayüzü için Zengin HTML 404 Guardian Görünümü
-        self::renderHtmlView($path, $method, $analysis);
-        exit;
+        // Hafta 07 (Görev 7): Web Arayüzü için Generic 404 Sayfasına Yönlendir (Redirect Invalid Request)
+        $redirectUrl = '/404?from=' . urlencode($path) . '&reason=' . urlencode($analysis['reason']);
+        Response::redirect($redirectUrl, 302);
     }
 
     /**
