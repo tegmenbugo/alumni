@@ -1,13 +1,22 @@
 <?php
 namespace App\Core;
 
+use App\Middlewares\LoggerMiddleware;
+use App\Middlewares\NotFoundGuardianMiddleware;
+
 /**
  * Merkezi Yönlendirici (HTTP Router)
  * MVC mimarisinde gelen istekleri uygun Controller ve metodlarına dağıtır.
+ * Hafta 07: LoggerMiddleware ve NotFoundGuardianMiddleware entegrasyonu.
  */
 class Router
 {
     private array $routes = [];
+
+    public function getRoutes(): array
+    {
+        return $this->routes;
+    }
 
     public function get(string $path, array $handler): void
     {
@@ -45,6 +54,9 @@ class Router
 
     public function dispatch(): void
     {
+        // Hafta 07 (Görev 3): Logger Middleware - Client'tan server'a gelen ilk anda başlat
+        LoggerMiddleware::start();
+
         $requestMethod = $_SERVER['REQUEST_METHOD'] ?? 'GET';
         $rawUri = $_SERVER['REQUEST_URI'] ?? '/';
         $requestPath = parse_url($rawUri, PHP_URL_PATH);
@@ -96,13 +108,7 @@ class Router
             }
         }
 
-        // Eşleşme bulunamadı: 404
-        if (strpos($requestPath, '/api/') === 0) {
-            Response::json(['error' => 'Endpoint bulunamadı: ' . $requestPath], 404);
-        } else {
-            http_response_code(404);
-            echo "404 - Sayfa Bulunamadı: " . htmlspecialchars($requestPath, ENT_QUOTES, 'UTF-8');
-            exit;
-        }
+        // Eşleşme bulunamadı: Hafta 07 (Görev 4) - 404 Guardian Middleware devreye girer
+        NotFoundGuardianMiddleware::handle($requestPath, $requestMethod, $this->routes);
     }
 }

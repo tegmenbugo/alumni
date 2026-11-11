@@ -270,7 +270,7 @@ Docker mimarisinde konteynerlar kapatılıp yok edildiğinde (`docker compose do
 * [x] **Week 04:** MVC architecture (Decoupled Front Controller, Router, Controllers [UserController & ApiUserController], Models [PDO User], Views, and synchronized Swagger UI).
 * [x] **Week 05:** Database & ORM — Data Design Documentation (`ddd.md`), Docker Compose Database Service (`db`), Environment Variables (`.env` vs `.example.env`), Migration Engine (`migrate.php`), and passing "The Forgetting Test".
 * [x] **Week 06:** Database integration & multi-table relationships — Updated `job_postings` table in `ddd.md`, created `008_update_job_postings_table.sql` migration (pending/unmigrated), and implemented `JobPosting` & `JobApplication` relational models with `User` relationships.
-* [x] **Week 07:** Business Rules, Validation Contract & Postman Invalid Requests — Defined JobPosting validation rules in `ddd.md` Section 9 (title required max 120, company required max 120, city/description optional, salary bounds, email/URL/enum checks), enforced in `JobPosting::validate` and `ApiJobController` with HTTP 400/422 responses.
+* [x] **Week 07:** Business Rules, Validation Contract, Logger Middleware & 404 Guardian — Defined JobPosting validation rules in `ddd.md` Section 9 (title required max 120, company required max 120, city/description optional, salary bounds, email/URL/enum checks); implemented `LoggerMiddleware` (logging `time, method, route, response type, duration` to terminal) and `NotFoundGuardianMiddleware` (returning reasoned 404 with suggestions & method mismatch analysis).
 * [ ] **Week 08:** Midterm — code review.
 * [ ] **Week 09:** Middleware — the bouncer.
 * [ ] **Week 10:** Views & front-end integration.

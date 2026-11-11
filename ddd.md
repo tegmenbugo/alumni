@@ -644,6 +644,26 @@ API uç noktalarına gönderilen geçersiz isteklere sistemin verdiği standart 
 | **9. Geçersiz / Boş JSON Gövdesi** | `{ invalid_json... }` veya boş body | `400 Bad Request` | `"error": "Geçersiz JSON sözdizimi"` veya `"Boş istek gövdesi"` |
 | **10. Olmayan İlan ID'si (GET/PUT/DELETE)** | `GET /api/jobs/99999` veya `GET /api/jobs/abc` | `404 Not Found` / `400 Bad Request` | `"error": "İş ilanı bulunamadı (ID: 99999)"` |
 
+### 9.5. HTTP Ara Katmanları (Middlewares - Hafta 07)
+
+Sistem mimarisine iki kritik ara katman (middleware) dahil edilmiştir:
+
+1. **`LoggerMiddleware` (`App\Middlewares\LoggerMiddleware`):**
+   * **İşlevi:** Client'tan server'a ulaşan tüm HTTP isteklerinde anında devreye girer. İstek tamamlandığında yanıt durum kodu (`http_response_code`) ve toplam süreyi (`microtime`) hesaplayarak sunucu terminaline yapısal log basar.
+   * **Terminal Formatı:**
+     ```text
+     time 10.20.39 mehod:POST route:/user response type : 201 duration :18ms
+     ```
+   * **Hedef Çıktı Kanalları:** `php://stderr`, `STDERR`, Docker stdout logları.
+
+2. **`NotFoundGuardianMiddleware` (`App\Middlewares\NotFoundGuardianMiddleware` - 404 Guardian):**
+   * **İşlevi:** Eşleşmeyen rotalarda yalnızca standart bir 404 kodu vermek yerine, hatanın **somut sebebini (reason)** ve akıllı yönlendirmeleri sunar.
+   * **Gerekçe Analiz Motoru:**
+     * **Method Not Allowed:** İstenen yol mevcut fakat metot uyuşmuyorsa desteklenen HTTP metotlarını bildirir (`METHOD_NOT_ALLOWED_ON_ENDPOINT`).
+     * **Yazım Hatası (Typo Detection):** Levenshtein algoritmasıyla sisteme kayıtlı en yakın rotaları önerir (`TYPO_OR_SIMILAR_ROUTE`).
+     * **Bilinmeyen Ad Alanı:** Desteklenmeyen API sürümlerini veya kök yolları tespit eder.
+   * **İki Modlu Yanıt:** API istemcileri için yapılandırılmış JSON, tarayıcılar için zengin Bootstrap 404 Guardian arayüzü sunar.
+
 ---
 
 ## ⚙️ 10. Otomatik Migrasyon Motoru ve CLI Koşucu (Migration Engine)
