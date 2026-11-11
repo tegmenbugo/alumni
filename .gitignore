@@ -12,7 +12,10 @@
 # PHP & Local Config
 config/config.local.php
 *.log
+*.logs
 error_log
+logs/*
+!logs/.gitkeep
 
 # Environment Variables & Secrets (Hassas Veriler Asla Git'e Yüklenmez)
 .env

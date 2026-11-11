@@ -3,11 +3,12 @@ namespace App\Core;
 
 use App\Middlewares\LoggerMiddleware;
 use App\Middlewares\NotFoundGuardianMiddleware;
+use App\Middlewares\ServerErrorGuardianMiddleware;
 
 /**
  * Merkezi Yönlendirici (HTTP Router)
  * MVC mimarisinde gelen istekleri uygun Controller ve metodlarına dağıtır.
- * Hafta 07: LoggerMiddleware ve NotFoundGuardianMiddleware entegrasyonu.
+ * Hafta 07: LoggerMiddleware, NotFoundGuardianMiddleware ve ServerErrorGuardianMiddleware entegrasyonu.
  */
 class Router
 {
@@ -54,7 +55,10 @@ class Router
 
     public function dispatch(): void
     {
-        // Hafta 07 (Görev 3): Logger Middleware - Client'tan server'a gelen ilk anda başlat
+        // Hafta 07 (Görev 5): 5xx Guardian - Tüm istisnaları ve sunucu hatalarını yakala
+        ServerErrorGuardianMiddleware::register();
+
+        // Hafta 07 (Görev 3 & 6): Logger Middleware - Client'tan gelen ilk anda başlat (Terminal + logs/error.logs)
         LoggerMiddleware::start();
 
         $requestMethod = $_SERVER['REQUEST_METHOD'] ?? 'GET';
@@ -101,10 +105,16 @@ class Router
                     }
                 }
 
-                [$controllerClass, $action] = $route['handler'];
-                $controller = new $controllerClass();
-                call_user_func_array([$controller, $action], $params);
-                return;
+                try {
+                    [$controllerClass, $action] = $route['handler'];
+                    $controller = new $controllerClass();
+                    call_user_func_array([$controller, $action], $params);
+                    return;
+                } catch (\Throwable $e) {
+                    // 5xx Guardian beklenmeyen controller ve veritabanı hatalarını yakalar
+                    ServerErrorGuardianMiddleware::handleException($e);
+                    return;
+                }
             }
         }
 

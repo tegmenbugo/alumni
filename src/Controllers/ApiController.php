@@ -68,6 +68,15 @@ class ApiController
     }
 
     /**
+     * GET /api/test-500 - 5xx Guardian ve logs/error.logs Test Uç Noktası (Hafta 07)
+     * Kasten bir sunucu hatası üreterek 5xx Guardian'ın devreye girişini simüle eder.
+     */
+    public function test500(): void
+    {
+        throw new \RuntimeException("5xx Guardian Testi: Simüle edilmiş sunucu istisnası (Simulated Internal Server Exception).");
+    }
+
+    /**
      * GET /api/openapi.json - OpenAPI 3.0 Şeması
      */
     public function openapi(): void
@@ -116,6 +125,15 @@ class ApiController
                         'summary'   => 'ddd.md Veritabanı Migrasyon ve Tablo Durumu (ApiController::migrations)',
                         'responses' => [
                             '200' => ['description' => 'Migrasyon durumu ve ddd.md tabloları listesi']
+                        ]
+                    ]
+                ],
+                '/api/test-500' => [
+                    'get' => [
+                        'tags'      => ['System'],
+                        'summary'   => '5xx Guardian ve logs/error.logs Test Uç Noktası (Simüle edilmiş 500)',
+                        'responses' => [
+                            '500' => ['description' => '5xx Guardian devreye girer ve gerekçeli hata döner']
                         ]
                     ]
                 ],

@@ -58,6 +58,7 @@ $router->get('/api/migrations',   [ApiController::class, 'migrations']);
 $router->get('/api/swagger',      [ApiController::class, 'swagger']);
 $router->get('/swagger',          [ApiController::class, 'swaggerRedirect']);
 $router->get('/api/openapi.json', [ApiController::class, 'openapi']);
+$router->get('/api/test-500',     [ApiController::class, 'test500']); // 5xx Guardian & Log Test Uç Noktası (Hafta 07)
 
 // -------------------------------------------------------------
 // WEB CONTROLLER ROTALARI: UserController (Week 04 - Görev 3 & 4 & 5 & 6)

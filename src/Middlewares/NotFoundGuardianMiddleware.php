@@ -22,6 +22,14 @@ class NotFoundGuardianMiddleware
     {
         $analysis = self::analyzeReason($path, $method, $registeredRoutes);
 
+        // Görev 6: 404 Guardian hatayı ve gerekçesini logs/error.logs dosyasına kaydeder
+        LoggerMiddleware::logError("404 NOT FOUND: {$analysis['reason']}", [
+            'path'        => $path,
+            'method'      => $method,
+            'category'    => $analysis['category'],
+            'suggestions' => $analysis['suggestions']
+        ]);
+
         http_response_code(404);
 
         // API isteği mi (veya Accept: application/json) kontrolü

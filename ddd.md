@@ -644,25 +644,33 @@ API uç noktalarına gönderilen geçersiz isteklere sistemin verdiği standart 
 | **9. Geçersiz / Boş JSON Gövdesi** | `{ invalid_json... }` veya boş body | `400 Bad Request` | `"error": "Geçersiz JSON sözdizimi"` veya `"Boş istek gövdesi"` |
 | **10. Olmayan İlan ID'si (GET/PUT/DELETE)** | `GET /api/jobs/99999` veya `GET /api/jobs/abc` | `404 Not Found` / `400 Bad Request` | `"error": "İş ilanı bulunamadı (ID: 99999)"` |
 
-### 9.5. HTTP Ara Katmanları (Middlewares - Hafta 07)
+### 9.5. HTTP Ara Katmanları ve Hata Bekçileri (Middlewares & Guardians - Hafta 07)
 
-Sistem mimarisine iki kritik ara katman (middleware) dahil edilmiştir:
+Sistem mimarisine sunucu kararlılığını ve hata izlenebilirliğini sağlayan üç temel ara katman dahil edilmiştir:
 
 1. **`LoggerMiddleware` (`App\Middlewares\LoggerMiddleware`):**
-   * **İşlevi:** Client'tan server'a ulaşan tüm HTTP isteklerinde anında devreye girer. İstek tamamlandığında yanıt durum kodu (`http_response_code`) ve toplam süreyi (`microtime`) hesaplayarak sunucu terminaline yapısal log basar.
-   * **Terminal Formatı:**
+   * **İşlevi:** Client'tan server'a ulaşan tüm HTTP isteklerinde anında devreye girer. İstek tamamlandığında yanıt durum kodu (`http_response_code`) ve toplam süreyi (`microtime`) hesaplayarak sunucu terminaline yapısal log basar ve dosyaya kaydeder.
+   * **Terminal Formatı (Düzeltilmiş):**
      ```text
-     time 10.20.39 mehod:POST route:/user response type : 201 duration :18ms
+     time 10.20.39 method:POST route:/user response type : 201 duration :18.4ms
      ```
-   * **Hedef Çıktı Kanalları:** `php://stderr`, `STDERR`, Docker stdout logları.
+   * **Kalıcı Dosya Kaydı (`logs/`):**
+     * **`logs/requests.log`:** Sistemden geçen tüm isteklerin tarih, IP ve metodunu tutar.
+     * **`logs/error.logs`:** HTTP 4xx ve 5xx hata durumlarında otomatik olarak hata kaydı oluşturur.
 
 2. **`NotFoundGuardianMiddleware` (`App\Middlewares\NotFoundGuardianMiddleware` - 404 Guardian):**
    * **İşlevi:** Eşleşmeyen rotalarda yalnızca standart bir 404 kodu vermek yerine, hatanın **somut sebebini (reason)** ve akıllı yönlendirmeleri sunar.
-   * **Gerekçe Analiz Motoru:**
-     * **Method Not Allowed:** İstenen yol mevcut fakat metot uyuşmuyorsa desteklenen HTTP metotlarını bildirir (`METHOD_NOT_ALLOWED_ON_ENDPOINT`).
-     * **Yazım Hatası (Typo Detection):** Levenshtein algoritmasıyla sisteme kayıtlı en yakın rotaları önerir (`TYPO_OR_SIMILAR_ROUTE`).
-     * **Bilinmeyen Ad Alanı:** Desteklenmeyen API sürümlerini veya kök yolları tespit eder.
-   * **İki Modlu Yanıt:** API istemcileri için yapılandırılmış JSON, tarayıcılar için zengin Bootstrap 404 Guardian arayüzü sunar.
+   * **Hata Analiz Motoru:**
+     * **Method Not Allowed:** İstenen rota var fakat HTTP metodu uyuşmuyorsa izin verilen metotları döner (`METHOD_NOT_ALLOWED_ON_ENDPOINT`).
+     * **Yazım Hatası (Typo Detection):** Levenshtein algoritmasıyla en yakın geçerli rotaları önerir (`TYPO_OR_SIMILAR_ROUTE`).
+   * **Dosya Kaydı:** Oluşan 404 gerekçesini `logs/error.logs` dosyasına yazar.
+   * **Çift Modlu Yanıt:** API istemcileri için JSON, web kullanıcıları için Bootstrap 404 Guardian kartı çizer.
+
+3. **`ServerErrorGuardianMiddleware` (`App\Middlewares\ServerErrorGuardianMiddleware` - 5xx Guardian):**
+   * **İşlevi:** 500'lü (500, 502, 503) tüm sunucu hatalarını, veritabanı kesintilerini ve yakalanamayan PHP `Throwable` istisnalarını yakalar.
+   * **Güvenli Hata Sözleşmesi:** Sistem şifrelerini veya sunucu dosya yollarını istemciye sızdırmadan gerekçeli (reason) ve benzersiz bir takip numaralı (`error_id`, örn: `ERR-A1B2C3D4`) yanıt döner.
+   * **Derinlemesine Loglama:** Hatanın sınıfını, sebebini, kaynak dosyasını, satırını ve tam çağrı yığınını (stack trace) `logs/error.logs` dosyasına arşivler.
+   * **Test Uç Noktası:** `GET /api/test-500` rotası üzerinden 5xx Guardian'ın devreye girişi anında test edilebilir.
 
 ---
 
