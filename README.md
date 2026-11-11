@@ -90,7 +90,9 @@ sequenceDiagram
 
 ```text
 alumni/
-├── database/                           # [VERİTABANI MİGRASYONLARI]
+├── database/                           # [VERİTABANI MİGRASYONLARI & FACTORIES]
+│   ├── factories/                      # Sentetik veri fabrikaları (UserFactory, JobPostingFactory)
+│   ├── seeders/                        # Dinamik veritabanı tohumlayıcı (DatabaseSeeder)
 │   └── migrations/                     # ddd.md şemasına göre SQL migrasyon betikleri
 │       ├── 001_create_users_table.sql
 │       ├── 002_create_profiles_table.sql
@@ -99,48 +101,63 @@ alumni/
 │       ├── 005_create_skills_tables.sql
 │       ├── 006_create_job_postings_tables.sql
 │       ├── 007_seed_initial_data.sql
-│       └── 008_update_job_postings_table.sql # [Hafta 06 - Görev 2] Bekleyen migrasyon
+│       ├── 008_update_job_postings_table.sql      # [Hafta 06] Bekleyen ilan migrasyonu
+│       └── 009_update_job_applications_table.sql  # [Hafta 06] Bekleyen başvuru migrasyonu
 │
 ├── data/                               # [KALICI VERİ DEPOSU (Volume)]
 │   ├── alumni.sqlite                   # SQLite veritabanı dosyası
 │   └── users.json                      # JSON başlangıç veri deposu
 │
+├── logs/                               # [HATA & İSTEK GÜNLÜKLERİ - Hafta 07 (Görev 6)]
+│   ├── error.logs                      # 4xx ve 5xx hata detayları ve stack trace kayıtları
+│   └── requests.log                    # Tüm HTTP isteklerinin zaman, IP ve süre kayıtları
+│
 ├── src/                                # [UYGULAMA ÇEKİRDEĞİ & İŞ MANTIĞI]
 │   ├── Core/                           # Çekirdek Altyapı Sınıfları
 │   │   ├── Database.php                # PDO bağlantı yöneticisi (SQLite & MySQL)
-│   │   ├── Env.php                     # .env ortam değişkenleri ayrıştırıcı (Görev 4)
-│   │   ├── Migration.php               # ddd.md migrasyon koşucu (Görev 5)
-│   │   ├── Router.php                  # Dinamik regex rota çözümleyici
+│   │   ├── Env.php                     # .env ortam değişkenleri ayrıştırıcı
+│   │   ├── Migration.php               # ddd.md migrasyon koşucu
+│   │   ├── Router.php                  # Dinamik regex rota çözümleyici ve dispatch
 │   │   ├── Response.php                # JSON, Text ve Redirect HTTP yanıt üreticisi
 │   │   └── View.php                    # HTML şablon renderer
 │   │
-│   ├── Models/                         # [MODEL KATMANI (M) - Hafta 06 (Görev 3)]
+│   ├── Middlewares/                    # [ARA KATMANLAR & GÜVENLİK BEKÇİLERİ - Hafta 07]
+│   │   ├── LoggerMiddleware.php        # İstek süresi, metot ve HTTP kodunu terminale ve logs/'a basar
+│   │   ├── NotFoundGuardianMiddleware.php   # [404 Guardian] Gerekçeli 404 ve rota öneri motoru
+│   │   └── ServerErrorGuardianMiddleware.php # [5xx Guardian] 500 hatalarını yakalar, takip ID'si ve döküm sunar
+│   │
+│   ├── Models/                         # [MODEL KATMANI (M)]
 │   │   ├── User.php                    # Kullanıcı modeli (İş ilanları ve başvuru ilişkileri ile)
-│   │   ├── JobPosting.php              # [YENİ] İş İlanı modeli (BelongsTo User, HasMany Applications)
-│   │   └── JobApplication.php          # [YENİ] Başvuru modeli (BelongsTo JobPosting, BelongsTo User)
+│   │   ├── JobPosting.php              # İş İlanı modeli (ddd.md iş kuralları ve validasyon ile)
+│   │   └── JobApplication.php          # Başvuru modeli (BelongsTo JobPosting, BelongsTo User)
 │   │
 │   └── Controllers/                    # [CONTROLLER KATMANI (C)]
 │       ├── UserController.php          # [Web Controller] HTML arayüz CRUD işlemleri (/users)
 │       ├── ApiUserController.php       # [REST API Controller] JSON CRUD uç noktaları (/api/users)
+│       ├── JobPostingController.php    # [Web Controller] İlanlar portalı ve başvuru UI (/jobs)
+│       ├── ApiJobController.php        # [REST API Controller] Doğrudan ve iç içe ilan API'leri (/api/jobs)
+│       ├── ApiApplicationController.php# [REST API Controller] Doğrudan başvuru API'leri (/api/applications)
 │       ├── HomeController.php          # Web sayfaları (/, /hello, /sum, /about, /Alumni)
-│       └── ApiController.php           # Sistem sağlığı (/api/health), Migrasyonlar (/api/migrations) ve Swagger
+│       └── ApiController.php           # Sistem sağlığı (/api/health), Migrasyonlar (/api/migrations), /api/test-500 ve Swagger
 │
 ├── views/                              # [VIEW KATMANI (V)]
 │   ├── home.php                        # Ana kontrol paneli ve uç nokta test arayüzü
 │   ├── about.php                       # Proje hakkında sayfası
 │   ├── swagger.php                     # Swagger UI canlı dokümantasyon sayfası
-│   └── users/                          # Mezun web arayüz şablonları (index, show, edit)
+│   ├── users/                          # Mezun web arayüz şablonları (index, show, edit)
+│   └── jobs/                           # [Hafta 06 UI] İlan portalı ve detay/başvuru ekranları (index, show)
 │
-├── .example.env                        # [ORTAM ŞABLONU - Görev 4] Şifresiz güvenli env şablonu (Git'e yüklenir)
+├── .example.env                        # [ORTAM ŞABLONU] Şifresiz güvenli env şablonu (Git'e yüklenir)
 ├── .env.example                        # [ALTERNATİF ŞABLON] Standart env şablon kopyası
 ├── .env                                # [YEREL ORTAM] Hassas veriler (Git'te İGNORLANIR)
-├── migrate.php                         # [MİGRASYON CLI - Görev 5] php migrate.php komut satırı arayüzü
-├── ddd.md                              # [DATA DESIGN - Hafta 05] Kapsamlı veri sözlüğü ve ERD şeması
+├── migrate.php                         # [MİGRASYON CLI] php migrate.php komut satırı arayüzü
+├── seed.php                            # [SEEDER CLI] php seed.php kullanıcı ve ilan tohumlayıcı
+├── ddd.md                              # [DATA DESIGN] Kapsamlı veri sözlüğü, iş kuralları ve ERD şeması
 ├── Dockerfile                          # Konteyner tanımı (PHP 8.3 + Apache + pdo_mysql)
-├── docker-compose.yml                  # [GÖREV 3] Web + MySQL servisleri ve persistent volume
+├── docker-compose.yml                  # Web + MySQL servisleri ve persistent volume
 ├── index.php                           # [FRONT CONTROLLER] Tek giriş kapısı
 ├── .htaccess                           # Apache URL rewrite motoru
-├── .gitignore                          # Sürüm kontrolü dışı dosyalar (.env korumalı)
+├── .gitignore                          # Sürüm kontrolü dışı dosyalar (.env ve logs korumalı)
 └── README.md                           # Proje mimarisi ve dokümantasyonu
 ```
 

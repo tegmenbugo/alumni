@@ -731,5 +731,6 @@ Sistemin ilk açılışta zengin ve dinamik mezun verileriyle dolup taşması i�
 * [x] **Hafta 03:** REST API CRUD uç noktaları ve Swagger UI.
 * [x] **Hafta 04:** Saf PHP Nesne Yönelimli MVC ayrımı (`UserController` vs `ApiUserController`).
 * [x] **Hafta 05:** Veri Tasarım Dokümantasyonu (`ddd.md`), Docker Compose Veritabanı (`db`), Ortam Değişkenleri (`.env` vs `.example.env`), Migrasyon Motoru (`migrate.php`), UserFactory & Seeder (`seed.php`), Asla Aşılmayacak Kurallar (`README.md`) ve "The Forgetting Test" kalıcılığı.
-* [ ] **Hafta 06:** Çoklu tablo ilişkileri (`profiles`, `education_history`, `work_experiences`) ve veritabanı migrasyonları.
-* [ ] **Hafta 07:** İleri düzey ilişkisel sorgular, filtreleme ve sayfalama (Pagination).
+* [x] **Hafta 06:** Çoklu tablo ilişkileri (`job_postings`, `job_applications`), doğrudan ve iç içe (nested) rotalar, bekleyen migrasyonlar (008, 009) ve iş ilanları web arayüzü (UI).
+* [x] **Hafta 07:** İş Kuralları (Business Rules & Validation Contract), Postman geçersiz istek testleri, `LoggerMiddleware` (terminal ve dosya kaydı), `NotFoundGuardianMiddleware` (404 Guardian) ve `ServerErrorGuardianMiddleware` (5xx Guardian).
+* [ ] **Hafta 08:** Vize / Kod İncelemesi (Midterm Code Review).
