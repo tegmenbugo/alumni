@@ -3,7 +3,7 @@
 > **26-27 Web Programming Dersi Dönem Projesi · Veri Tasarım ve Mimari Dokümantasyonu**  
 > **Ders:** YBSB3001 · Web Programming · Doç. Dr. Emre Akadal · İstanbul Üniversitesi İktisat Fakültesi YBS  
 > **Geliştirici:** Battal Buğra Karataş ([@tegmenbugo](https://github.com/tegmenbugo))  
-> **Ana Dokümantasyon:** [README.md](./README.md) · **Canlı Sistem:** `http://localhost:8000`
+> **Ana Dokümantasyon:** [README.md](./README.md) · **Marka Rehberi:** [brand.md](./brand.md) · **Tasarım Sistemi:** [DESIGN.md](./DESIGN.md) · **Canlı Sistem:** `http://localhost:8000`
 
 ---
 
@@ -739,4 +739,5 @@ Sistemin ilk açılışta zengin ve dinamik mezun verileriyle dolup taşması i�
 * [x] **Hafta 05:** Veri Tasarım Dokümantasyonu (`ddd.md`), Docker Compose Veritabanı (`db`), Ortam Değişkenleri (`.env` vs `.example.env`), Migrasyon Motoru (`migrate.php`), UserFactory & Seeder (`seed.php`), Asla Aşılmayacak Kurallar (`README.md`) ve "The Forgetting Test" kalıcılığı.
 * [x] **Hafta 06:** Çoklu tablo ilişkileri (`job_postings`, `job_applications`), doğrudan ve iç içe (nested) rotalar, bekleyen migrasyonlar (008, 009) ve iş ilanları web arayüzü (UI).
 * [x] **Hafta 07:** İş Kuralları (Business Rules & Validation Contract), Postman geçersiz istek testleri, `LoggerMiddleware` (terminal ve dosya kaydı), `NotFoundGuardianMiddleware` (404 Guardian) ve `ServerErrorGuardianMiddleware` (5xx Guardian).
-* [ ] **Hafta 08:** Vize / Kod İncelemesi (Midterm Code Review).
+* [x] **Hafta 08:** Geçici Dalda İş Akışı (`feature/homepage-design`), Marka Rehberi ([brand.md](./brand.md)) ve [VoltAgent/awesome-design-md](https://github.com/VoltAgent/awesome-design-md) standartlarında Tasarım Şartnamesi ([DESIGN.md](./DESIGN.md)).
+* [ ] **Hafta 09:** Ara Katmanlar & Güvenlik (Middleware - The Bouncer).

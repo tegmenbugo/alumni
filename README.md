@@ -2,7 +2,8 @@
 
 > **26-27 Web Programming Dersi Dönem Projesi**  
 > **Ders:** YBSB3001 · Web Programming · Doç. Dr. Emre Akadal · İstanbul Üniversitesi İktisat Fakültesi YBS  
-> **Repo:** [github.com/tegmenbugo/alumni](https://github.com/tegmenbugo/alumni)
+> **Repo:** [github.com/tegmenbugo/alumni](https://github.com/tegmenbugo/alumni)  
+> **Canlı Sözleşmeler:** [ddd.md (Veri Mimarisi)](./ddd.md) · [brand.md (Marka Kimliği)](./brand.md) · [DESIGN.md (Tasarım Sistemi)](./DESIGN.md) · [Swagger UI](/api/swagger)
 
 ---
 
@@ -49,6 +50,8 @@ Doç. Dr. Emre Akadal'ın ders standartları gereğince bu projede **asla taviz 
    Sistem, karmaşık kurulum adımları olmaksızın `docker compose up` ile tek komutta ayağa kalkmalıdır.
 6. **Sürekli API & Swagger Senkronizasyonu:**  
    Eklenen veya değiştirilen her API rotası eş zamanlı olarak OpenAPI şemasında (`/api/openapi.json`) ve Swagger UI (`/api/swagger`) üzerinde güncel tutulmalıdır.
+7. **Marka ve Tasarım Bütünlüğü ([brand.md](./brand.md) & [DESIGN.md](./DESIGN.md) Çapası):**  
+   Arayüz geliştirmelerinde rastgele stiller yerine; [VoltAgent/awesome-design-md](https://github.com/VoltAgent/awesome-design-md) standartlarına uygun olarak hazırlanan [DESIGN.md](./DESIGN.md) tokenları ve [brand.md](./brand.md) marka ilkeleri yegane görsel doğruluk kaynağıdır.
 
 ---
 
@@ -156,6 +159,8 @@ alumni/
 ├── migrate.php                         # [MİGRASYON CLI] php migrate.php komut satırı arayüzü
 ├── seed.php                            # [SEEDER CLI] php seed.php kullanıcı ve ilan tohumlayıcı
 ├── ddd.md                              # [DATA DESIGN] Kapsamlı veri sözlüğü, iş kuralları ve ERD şeması
+├── brand.md                            # [MARKA REHBERİ] Kurumsal kimlik, logo ve renk paleti standartları
+├── DESIGN.md                           # [AI DESIGN SYSTEM] VoltAgent/awesome-design-md standartlarında UI tokenları
 ├── Dockerfile                          # Konteyner tanımı (PHP 8.3 + Apache + pdo_mysql)
 ├── docker-compose.yml                  # Web + MySQL servisleri ve persistent volume
 ├── index.php                           # [FRONT CONTROLLER] Tek giriş kapısı
@@ -325,6 +330,21 @@ Dersin 7. haftasında sistem güvenliği, veri doğruluğu, gözlemlenebilirlik 
 
 ---
 
+<a id="brand-design-system"></a>
+## 🎨 Marka Kimliği ve Tasarım Sistemi ([brand.md](./brand.md) & [DESIGN.md](./DESIGN.md))
+
+Dersin ve modern yazılım mühendisliğinin temel ilkelerinden biri olan **Görsel Sözleşme (Visual Contract)** uyarınca sistem, harici tasarım bağımlılıkları olmadan AI ajanlarının ve geliştiricilerin doğrudan okuyup uygulayabileceği iki resmi şartnameye bağlanmıştır:
+
+1. **[brand.md — Marka Kimliği ve Kurumsal Tasarım Rehberi](./brand.md):**
+   * İstanbul Üniversitesi kurumsal kimliği (IU Deep Navy `#1e3a8a`, Royal Blue `#2563eb`, Alumni Gold `#f59e0b`).
+   * Tipografi hiyerarşisi, düğme, form, kart ve rozet görsel bileşen standartları.
+   * Do's and Don'ts (Tasarımda yapılması ve kaçınılması gerekenler).
+2. **[DESIGN.md — Agent-Readable Design Tokens & UI Specification](./DESIGN.md):**
+   * Açık kaynak **[VoltAgent/awesome-design-md](https://github.com/VoltAgent/awesome-design-md)** standartlarına uygun olarak modellenmiş tam teknik şartname.
+   * CSS Değişkenleri (`--color-primary`, `--radius-md`, `--shadow-sm`), boşluk (spacing) skalası ve duyarlı (responsive) ızgara kuralları.
+
+---
+
 ## 🗓️ Dönem Yol Haritası (Fourteen Weeks Roadmap)
 
 * [x] **Week 01:** Project inception & fundamentals, repository setup, stack selection & justification.
@@ -333,8 +353,8 @@ Dersin 7. haftasında sistem güvenliği, veri doğruluğu, gözlemlenebilirlik 
 * [x] **Week 04:** MVC architecture (Decoupled Front Controller, Router, Controllers [UserController & ApiUserController], Models [PDO User], Views, and synchronized Swagger UI).
 * [x] **Week 05:** Database & ORM — Data Design Documentation (`ddd.md`), Docker Compose Database Service (`db`), Environment Variables (`.env` vs `.example.env`), Migration Engine (`migrate.php`), and passing "The Forgetting Test".
 * [x] **Week 06:** Database integration & multi-table relationships — Updated `job_postings` table in `ddd.md`, created `008_update_job_postings_table.sql` migration (pending/unmigrated), and implemented `JobPosting` & `JobApplication` relational models with `User` relationships.
-* [x] **Week 07:** Business Rules, Validation Contract, Logger Middleware, 404 & 5xx Guardians, Persistent File Logging (`logs/error.logs`), Generic 404 Page & Invalid Request Redirect — Full implementation of all Week 07 instructor requirements.
-* [ ] **Week 08:** Midterm — code review.
+* [x] **Week 07:** Business Rules, Validation Contract, Logger Middleware, 404 & 5xx Guardians, Persistent File Logging (`logs/error.logs`), Generic 404 Page & Invalid Request Redirect.
+* [x] **Week 08:** Feature Branching Workflow (`git checkout -b feature/homepage-design` & return to `main`), Modern Alumni Portal Homepage, Brand Identity Guidelines ([brand.md](./brand.md)) & Design System Specification ([DESIGN.md](./DESIGN.md) via VoltAgent standard).
 * [ ] **Week 09:** Middleware — the bouncer.
 * [ ] **Week 10:** Views & front-end integration.
 * [ ] **Week 11:** Authentication & authorization.
