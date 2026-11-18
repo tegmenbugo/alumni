@@ -3,180 +3,208 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= htmlspecialchars($job['title']) ?> - <?= htmlspecialchars($job['company_name']) ?></title>
+    <title><?= htmlspecialchars($job['title']) ?> · İlan Detayı & Başvuru</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body { background: #f8f9fa; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        .hero-card { border-radius: 16px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.08); }
+        :root {
+            --primary-navy: #1e3a8a;
+            --accent-blue: #2563eb;
+            --light-bg: #f8fafc;
+            --card-border: #e2e8f0;
+        }
+        body {
+            background-color: var(--light-bg);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            color: #1e293b;
+        }
+        .navbar-custom {
+            background: #ffffff;
+            border-bottom: 1px solid var(--card-border);
+        }
+        .job-detail-header {
+            background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+            color: white;
+            padding: 50px 0 70px;
+            border-radius: 0 0 24px 24px;
+        }
+        .card-custom {
+            background: #ffffff;
+            border-radius: 18px;
+            border: 1px solid var(--card-border);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+        }
     </style>
 </head>
 <body>
-    <div class="container py-5">
-        <div class="row justify-content-center">
-            <div class="col-lg-9">
-                <!-- Navigation -->
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <a href="/jobs" class="btn btn-outline-secondary">← Tüm İlanlara Dön</a>
-                    <a href="/users" class="btn btn-outline-primary">👥 Mezun Rehberi</a>
-                </div>
 
-                <!-- İlan Ana Kartı -->
-                <div class="card hero-card p-4 p-md-5 bg-white mb-4">
-                    <?php if (!empty($message)): ?>
-                        <div class="alert alert-success alert-dismissible fade show d-flex align-items-center mb-4" role="alert">
-                            <span class="fs-4 me-2">🎉</span>
-                            <div><?= htmlspecialchars($message) ?></div>
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Kapat"></button>
-                        </div>
-                    <?php endif; ?>
+    <!-- Ortak Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-custom sticky-top">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center gap-2 fw-bold text-dark" href="/">
+                <span style="font-size: 1.6rem;">🎓</span>
+                <span style="color: var(--primary-navy); font-size: 1.1rem;">Alumni Tracking</span>
+            </a>
+            <div class="ms-auto d-flex gap-2">
+                <a href="/jobs" class="btn btn-outline-secondary btn-sm">← Tüm İlanlar</a>
+            </div>
+        </div>
+    </nav>
 
-                    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
-                        <div>
-                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-1 rounded-pill mb-2">
-                                🏢 <?= htmlspecialchars($job['company_name']) ?>
-                            </span>
-                            <h2 class="fw-bold mb-1"><?= htmlspecialchars($job['title']) ?></h2>
-                            <p class="text-muted small mb-0">
-                                📍 <?= htmlspecialchars($job['location'] ?? 'İstanbul') ?> · 
-                                💼 <?= htmlspecialchars($job['employment_type'] ?? 'Tam Zamanlı') ?> · 
-                                🏠 <?= htmlspecialchars($job['workplace_type'] ?? 'Hibrit') ?> · 
-                                🎯 <?= htmlspecialchars($job['experience_level'] ?? 'Giriş Seviyesi') ?>
-                            </p>
-                        </div>
-                        <button class="btn btn-success fw-bold px-4 py-2" data-bs-toggle="modal" data-bs-target="#applyModal">
-                            ✍️ Hemen Başvur
-                        </button>
+    <!-- Header Bölümü -->
+    <header class="job-detail-header">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <div>
+                    <div class="d-flex gap-2 mb-2">
+                        <span class="badge bg-white bg-opacity-25 text-white px-3 py-1 rounded-pill">
+                            🏢 <?= htmlspecialchars($job['company_name']) ?>
+                        </span>
+                        <span class="badge bg-success text-white px-3 py-1 rounded-pill">
+                            ● <?= htmlspecialchars($job['status'] ?? 'active') ?>
+                        </span>
                     </div>
-
-                    <?php if (!empty($job['salary_min'])): ?>
-                        <div class="alert alert-light border d-flex align-items-center justify-content-between p-3 rounded-3 mb-4">
-                            <div>
-                                <small class="text-muted d-block">Maaş Skalası:</small>
-                                <strong class="fs-5 text-success">
-                                    <?= number_format($job['salary_min']) ?> - <?= number_format($job['salary_max'] ?? $job['salary_min']) ?> <?= htmlspecialchars($job['salary_currency'] ?? 'TRY') ?>
-                                </strong>
-                            </div>
-                            <?php if (!empty($job['deadline'])): ?>
-                                <div class="text-end">
-                                    <small class="text-muted d-block">Son Başvuru:</small>
-                                    <strong class="text-dark"><?= htmlspecialchars($job['deadline']) ?></strong>
-                                </div>
-                            <?php endif; ?>
-                        </div>
-                    <?php endif; ?>
-
-                    <!-- İlan Detayları -->
-                    <div class="mb-4">
-                        <h5 class="fw-bold text-dark border-bottom pb-2">📋 Pozisyon Açıklaması</h5>
-                        <p class="text-secondary leading-relaxed" style="white-space: pre-line;">
-                            <?= htmlspecialchars($job['description']) ?>
-                        </p>
-                    </div>
-
-                    <?php if (!empty($job['requirements'])): ?>
-                        <div class="mb-4">
-                            <h5 class="fw-bold text-dark border-bottom pb-2">🎯 Aranan Nitelikler & Yetkinlikler</h5>
-                            <p class="text-secondary" style="white-space: pre-line;">
-                                <?= htmlspecialchars($job['requirements']) ?>
-                            </p>
-                        </div>
-                    <?php endif; ?>
-
-                    <!-- İlan Sahibi Bilgisi -->
-                    <div class="card bg-light border-0 p-3 rounded-3 mb-4">
-                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
-                            <div>
-                                <small class="text-muted d-block">İlanı Yayınlayan Mezunumuz:</small>
-                                <strong><?= htmlspecialchars($job['posted_by_name'] ?? 'Mezun Üye') ?></strong>
-                                <span class="text-muted small ms-1">(<?= htmlspecialchars($job['poster_company'] ?? '') ?>)</span>
-                            </div>
-                            <?php if (!empty($job['posted_by_user_id'])): ?>
-                                <a href="/users/<?= $job['posted_by_user_id'] ?>" class="btn btn-sm btn-outline-primary">
-                                    Mezun Profilini Gör ➔
-                                </a>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-
-                    <!-- Gelen Başvurular (İlişkisel / Nested Veri) -->
-                    <div class="border-top pt-4">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5 class="fw-bold mb-0">
-                                📥 Bu İlana Yapılan Başvurular 
-                                <span class="badge bg-secondary"><?= count($applications) ?></span>
-                            </h5>
-                            <span class="badge bg-info-subtle text-info border">
-                                Nested Route: /jobs/<?= $job['id'] ?>/applications
-                            </span>
-                        </div>
-
-                        <?php if (!empty($applications)): ?>
-                            <div class="list-group">
-                                <?php foreach ($applications as $app): ?>
-                                    <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-start p-3">
-                                        <div>
-                                            <div class="d-flex align-items-center gap-2 mb-1">
-                                                <strong class="text-dark"><?= htmlspecialchars($app['applicant_name']) ?></strong>
-                                                <span class="badge bg-light text-dark border"><?= htmlspecialchars($app['applicant_department'] ?? 'Öğrenci') ?></span>
-                                                <span class="badge bg-primary-subtle text-primary"><?= htmlspecialchars($app['status']) ?></span>
-                                            </div>
-                                            <p class="text-muted small mb-1">
-                                                ✉️ <?= htmlspecialchars($app['applicant_email'] ?? '') ?> · 
-                                                📅 <?= htmlspecialchars($app['applied_at'] ?? '') ?>
-                                            </p>
-                                            <?php if (!empty($app['cover_letter'])): ?>
-                                                <small class="text-secondary d-block fst-italic">
-                                                    "<?= htmlspecialchars($app['cover_letter']) ?>"
-                                                </small>
-                                            <?php endif; ?>
-                                        </div>
-                                    </div>
-                                <?php endforeach; ?>
-                            </div>
-                        <?php else: ?>
-                            <div class="p-3 text-center text-muted bg-light rounded-3">
-                                <small>Bu ilana henüz başvuru yapılmadı. İlk başvuruyu siz yapabilirsiniz!</small>
-                            </div>
-                        <?php endif; ?>
-                    </div>
+                    <h1 class="h2 fw-bold mb-1"><?= htmlspecialchars($job['title']) ?></h1>
+                    <p class="mb-0 opacity-75 small">
+                        📍 <?= htmlspecialchars($job['location'] ?? 'İstanbul') ?> · 
+                        💼 <?= htmlspecialchars($job['employment_type'] ?? 'Tam Zamanlı') ?> · 
+                        🏢 <?= htmlspecialchars($job['workplace_type'] ?? 'Hibrit') ?>
+                    </p>
                 </div>
             </div>
         </div>
-    </div>
+    </header>
 
-    <!-- Başvuru Yap Modalı -->
-    <div class="modal fade" id="applyModal" tabindex="-1" aria-labelledby="applyModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <form action="/jobs/<?= $job['id'] ?>/apply" method="POST">
-                    <div class="modal-header">
-                        <h5 class="modal-title fw-bold" id="applyModalLabel">✍️ İlana Başvuru Yap</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
+    <main class="container mb-5" style="margin-top: -35px; position: relative; z-index: 2;">
+        <?php if (!empty($message)): ?>
+            <div class="alert alert-success alert-dismissible fade show mb-4 shadow-sm" role="alert">
+                🎉 <?= htmlspecialchars($message) ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        <?php endif; ?>
+
+        <div class="row g-4">
+            <!-- Sol Kolon: İlan Detayları -->
+            <div class="col-lg-7">
+                <div class="card card-custom p-4 mb-4">
+                    <h5 class="fw-bold mb-3 text-secondary">📋 Pozisyon Tanımı ve Sorumluluklar</h5>
+                    <p class="text-secondary lh-lg mb-4" style="white-space: pre-line;">
+                        <?= htmlspecialchars($job['description'] ?? 'Detaylı bir iş tanımı girilmedi.') ?>
+                    </p>
+
+                    <?php if (!empty($job['requirements'])): ?>
+                        <h5 class="fw-bold mb-3 text-secondary">🎯 Aranan Nitelikler & Yetkinlikler</h5>
+                        <p class="text-secondary lh-lg mb-4" style="white-space: pre-line;">
+                            <?= htmlspecialchars($job['requirements']) ?>
+                        </p>
+                    <?php endif; ?>
+
+                    <div class="row g-3 p-3 bg-light rounded-3 border mt-2">
+                        <div class="col-sm-6">
+                            <small class="text-muted d-block">Maaş Skalası</small>
+                            <strong class="text-success">
+                                <?php if (!empty($job['salary_min'])): ?>
+                                    <?= number_format($job['salary_min']) ?> - <?= number_format($job['salary_max'] ?? $job['salary_min']) ?> <?= htmlspecialchars($job['salary_currency'] ?? 'TRY') ?>
+                                <?php else: ?>
+                                    Belirtilmedi / Görüşmede
+                                <?php endif; ?>
+                            </strong>
+                        </div>
+                        <div class="col-sm-6">
+                            <small class="text-muted d-block">İlan Referans No</small>
+                            <strong class="text-dark">#<?= htmlspecialchars((string)$job['id']) ?></strong>
+                        </div>
                     </div>
-                    <div class="modal-body row g-3">
-                        <div class="col-12">
-                            <label class="form-label fw-semibold">Başvuran Mezun / Öğrenci Seçiniz *</label>
+                </div>
+
+                <!-- İlana Yapılan Başvurular Listesi (Nested) -->
+                <div class="card card-custom p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold mb-0 text-secondary">
+                            📥 Gelen Başvurular (<?= count($applications) ?>)
+                        </h5>
+                        <span class="badge bg-primary-subtle text-primary">Nested HasMany</span>
+                    </div>
+
+                    <?php if (!empty($applications)): ?>
+                        <div class="list-group list-group-flush">
+                            <?php foreach ($applications as $app): ?>
+                                <div class="list-group-item px-0 py-3 d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <div class="fw-bold text-dark">
+                                            <?= htmlspecialchars($app['applicant_name'] ?? 'Aday #' . $app['applicant_user_id']) ?>
+                                        </div>
+                                        <small class="text-muted">
+                                            <?= htmlspecialchars($app['applicant_email'] ?? '') ?> · 
+                                            Tarih: <?= date('d.m.Y H:i', strtotime($app['applied_at'] ?? 'now')) ?>
+                                        </small>
+                                        <?php if (!empty($app['cover_letter'])): ?>
+                                            <p class="small text-secondary mt-1 mb-0 italic">
+                                                "<?= htmlspecialchars($app['cover_letter']) ?>"
+                                            </p>
+                                        <?php endif; ?>
+                                    </div>
+                                    <span class="badge bg-info-subtle text-info">
+                                        <?= htmlspecialchars($app['status'] ?? 'applied') ?>
+                                    </span>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php else: ?>
+                        <p class="text-muted small mb-0 py-3 text-center">
+                            Henüz bu ilana bir başvuru yapılmadı. İlk adayı siz olun!
+                        </p>
+                    <?php endif; ?>
+                </div>
+            </div>
+
+            <!-- Sağ Kolon: Başvuru Formu Kartı -->
+            <div class="col-lg-5">
+                <div class="card card-custom p-4 sticky-top" style="top: 85px;">
+                    <div class="d-flex align-items-center gap-2 mb-3">
+                        <span class="fs-4">🚀</span>
+                        <h5 class="fw-bold mb-0">Hemen Başvuru Yap</h5>
+                    </div>
+                    <p class="text-muted small mb-4">
+                        Bu ilana mezun profilinizle tek tıkla başvurabilirsiniz.
+                    </p>
+
+                    <form action="/jobs/<?= $job['id'] ?>/apply" method="POST" class="d-flex flex-column gap-3">
+                        <div>
+                            <label class="form-label fw-semibold small">Başvuran Mezun / Öğrenci *</label>
                             <select name="applicant_user_id" class="form-select" required>
                                 <?php foreach ($users as $u): ?>
                                     <option value="<?= $u['id'] ?>">
-                                        <?= htmlspecialchars($u['name']) ?> (<?= htmlspecialchars($u['department'] ?? 'YBS') ?>)
+                                        <?= htmlspecialchars($u['name']) ?> (<?= htmlspecialchars($u['company'] ?? 'Mezun') ?>)
                                     </option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
-                        <div class="col-12">
-                            <label class="form-label fw-semibold">Ön Yazı / Motivasyon Notu</label>
-                            <textarea name="cover_letter" class="form-control" rows="3" placeholder="Neden bu pozisyona uygunsunuz? Yetkinliklerinizden bahsedin..."></textarea>
+                        <div>
+                            <label class="form-label fw-semibold small">Ön Yazı / Motivasyon</label>
+                            <textarea name="cover_letter" class="form-control" rows="3" placeholder="Neden bu rol için uygunsunuz?..."></textarea>
                         </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
-                        <button type="submit" class="btn btn-success fw-bold">Başvuruyu Gönder</button>
-                    </div>
-                </form>
+                        <div>
+                            <label class="form-label fw-semibold small">CV / Özgeçmiş Linki (PDF/Drive)</label>
+                            <input type="url" name="resume_url" class="form-control" placeholder="https://drive.google.com/...">
+                        </div>
+                        <div>
+                            <label class="form-label fw-semibold small">Portfolyo / GitHub Linki</label>
+                            <input type="url" name="portfolio_url" class="form-control" placeholder="https://github.com/...">
+                        </div>
+                        <button type="submit" class="btn btn-primary fw-semibold py-2 mt-2">
+                            📥 Başvurumu Gönder (POST /apply)
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
-    </div>
+    </main>
+
+    <footer class="bg-white border-top py-4 text-muted small text-center">
+        <div class="container">
+            Alumni Tracking System · İstanbul Üniversitesi İktisat Fakültesi YBS · 26-27 Web Programming
+        </div>
+    </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>

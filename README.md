@@ -3,7 +3,12 @@
 > **26-27 Web Programming Dersi Dönem Projesi**  
 > **Ders:** YBSB3001 · Web Programming · Doç. Dr. Emre Akadal · İstanbul Üniversitesi İktisat Fakültesi YBS  
 > **Repo:** [github.com/tegmenbugo/alumni](https://github.com/tegmenbugo/alumni)  
-> **Canlı Sözleşmeler:** [ddd.md (Veri Mimarisi)](./ddd.md) · [brand.md (Marka Kimliği)](./brand.md) · [DESIGN.md (Tasarım Sistemi)](./DESIGN.md) · [Swagger UI](/api/swagger)
+> 
+> ⚓ **Sözleşme Çapaları (Document Anchors):**  
+> * [🗄️ Veri Mimarisi (ddd.md)](./ddd.md)  
+> * [🎨 Marka Rehberi (brand.md)](./brand.md) ([Sayfa İçi Çapa ➔](#brand-md))  
+> * [📐 AI Tasarım Sistemi (DESIGN.md)](./DESIGN.md) ([Sayfa İçi Çapa ➔](#design-md))  
+> * [📚 Canlı Swagger UI](/api/swagger)
 
 ---
 
@@ -36,7 +41,7 @@ Komut çalıştıktan sonra tarayıcınızdan şu adrese gidebilirsiniz:
 
 ## 🛡️ Asla Aşılmayacak Mimari ve Veri Kuralları (System Invariants)
 
-Doç. Dr. Emre Akadal'ın ders standartları gereğince bu projede **asla taviz verilmeyecek 6 altın kural**:
+Doç. Dr. Emre Akadal'ın ders standartları gereğince bu projede **asla taviz verilmeyecek 7 altın kural**:
 
 1. **`ddd.md` Canlı Veri Sözleşmesi (Living Documentation & Self-Updating Rule):**  
    Sistemdeki herhangi bir varlık, tablo, sütun, ilişki, model veya migrasyon değiştiğinde; [ddd.md](./ddd.md) (Data Design Documentation) dosyası **derhal ve eksiksiz olarak güncellenir**. `ddd.md` veritabanının yegane doğruluk kaynağıdır (Single Source of Truth). Dokümantasyonu güncellenmemiş hiçbir kod değişikliği tamamlanmış sayılamaz.
@@ -330,6 +335,8 @@ Dersin 7. haftasında sistem güvenliği, veri doğruluğu, gözlemlenebilirlik 
 
 ---
 
+<a id="brand-md"></a>
+<a id="design-md"></a>
 <a id="brand-design-system"></a>
 ## 🎨 Marka Kimliği ve Tasarım Sistemi ([brand.md](./brand.md) & [DESIGN.md](./DESIGN.md))
 
