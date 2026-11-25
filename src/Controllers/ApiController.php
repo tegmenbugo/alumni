@@ -98,6 +98,10 @@ class ApiController
                     'description' => 'İş ve Staj İlanları Rotaları (Doğrudan ve İlişkisel Rotalar - Hafta 06)'
                 ],
                 [
+                    'name'        => 'Auth',
+                    'description' => 'Kimlik Doğrulama, Kayıt ve RBAC Rol Yönetimi (Hafta 09)'
+                ],
+                [
                     'name'        => 'JobApplications',
                     'description' => 'İş Başvuruları Rotaları (Doğrudan ve Nested Rotalar - Hafta 06)'
                 ],
@@ -143,6 +147,38 @@ class ApiController
                         'summary'   => 'Generic 404 Sayfası ve Yönlendirme Ekranı (ErrorController::notFound)',
                         'responses' => [
                             '404' => ['description' => 'Generic 404 HTML sayfası render edilir']
+                        ]
+                    ]
+                ],
+                '/api/auth/register' => [
+                    'post' => [
+                        'tags'        => ['Auth'],
+                        'summary'     => 'Yeni mezun veya öğrenci kaydı (Register) - AuthController::apiRegister',
+                        'requestBody' => [
+                            'required' => true,
+                            'content'  => [
+                                'application/json' => [
+                                    'schema' => [
+                                        'type'       => 'object',
+                                        'required'   => ['name', 'email', 'password', 'password_confirm', 'department'],
+                                        'properties' => [
+                                            'name'             => ['type' => 'string', 'example' => 'Zeynep Demir'],
+                                            'email'            => ['type' => 'string', 'format' => 'email', 'example' => 'zeynep.demir@alumni.iu.edu.tr'],
+                                            'role'             => ['type' => 'string', 'enum' => ['alumnus', 'student'], 'example' => 'alumnus'],
+                                            'department'       => ['type' => 'string', 'example' => 'Yönetim Bilişim Sistemleri'],
+                                            'graduationYear'   => ['type' => 'integer', 'example' => 2025],
+                                            'company'          => ['type' => 'string', 'example' => 'Trendyol'],
+                                            'password'         => ['type' => 'string', 'example' => 'Alumni2025'],
+                                            'password_confirm' => ['type' => 'string', 'example' => 'Alumni2025']
+                                        ]
+                                    ]
+                                ]
+                            ]
+                        ],
+                        'responses' => [
+                            '201' => ['description' => 'Kayıt başarılı (password_hash hariç kullanıcı döner)'],
+                            '403' => ['description' => 'Yetkisiz rol seçimi (admin/faculty self-register yasak)'],
+                            '422' => ['description' => 'Doğrulama hatası (eksik alan, mükerrer e-posta, zayıf parola)']
                         ]
                     ]
                 ],

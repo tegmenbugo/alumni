@@ -105,7 +105,7 @@
                     <small class="text-muted" style="font-size: 0.72rem;">İstanbul Üniversitesi YBS</small>
                 </div>
             </a>
-            <button class="navbar-toggler" type="button" data-bs-dismiss="collapse" data-bs-target="#mainNav">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="mainNav">
@@ -130,8 +130,8 @@
                     <a href="/jobs" class="btn btn-outline-primary btn-sm px-3 fw-semibold">
                         💼 İlanları Gör
                     </a>
-                    <a href="/users" class="btn btn-primary btn-sm px-3 fw-semibold">
-                        + Mezun Kaydı
+                    <a href="/register" class="btn btn-primary btn-sm px-3 fw-semibold">
+                        📝 Kayıt Ol
                     </a>
                 </div>
             </div>
@@ -154,7 +154,10 @@
                         Öğrenciler ile sektör profesyonelleri arasındaki en güçlü köprü.
                     </p>
                     <div class="d-flex justify-content-center gap-3 flex-wrap">
-                        <a href="/users" class="btn btn-light btn-lg px-4 py-2 fw-bold text-primary shadow-sm">
+                        <a href="/register" class="btn btn-light btn-lg px-4 py-2 fw-bold text-primary shadow-sm">
+                            📝 Hemen Kayıt Ol
+                        </a>
+                        <a href="/users" class="btn btn-outline-light btn-lg px-4 py-2 fw-semibold">
                             👥 Mezunları Keşfet
                         </a>
                         <a href="/jobs" class="btn btn-outline-light btn-lg px-4 py-2 fw-semibold">
@@ -302,6 +305,20 @@
                             <td><code>/api/jobs/1/applications</code></td>
                             <td>İlana gelen başvurular (Nested Route)</td>
                             <td class="text-end"><a href="/api/jobs/1/applications" class="btn btn-xs btn-outline-secondary py-0" target="_blank">JSON</a></td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge bg-info text-dark">Hafta 09</span></td>
+                            <td><span class="badge bg-success">GET / POST</span></td>
+                            <td><code>/register</code></td>
+                            <td><code>AuthController::showRegister() / register()</code> (Kayıt & RBAC)</td>
+                            <td class="text-end"><a href="/register" class="btn btn-xs btn-outline-primary py-0">Kayıt Ol</a></td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge bg-info text-dark">Hafta 09</span></td>
+                            <td><span class="badge bg-primary">POST API</span></td>
+                            <td><code>/api/auth/register</code></td>
+                            <td><code>AuthController::apiRegister()</code> (JSON Kayıt & Rol Koruması)</td>
+                            <td class="text-end"><a href="/api/swagger" class="btn btn-xs btn-outline-info py-0" target="_blank">Swagger</a></td>
                         </tr>
                         <tr>
                             <td><span class="badge bg-warning text-dark">Hafta 07</span></td>

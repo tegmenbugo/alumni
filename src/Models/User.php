@@ -16,23 +16,30 @@ class User
     }
 
     /**
+     * Satır tiplerini normalize eder (password_hash asla dönülmez).
+     */
+    private static function formatRow(array $row): array
+    {
+        $row['id'] = (int)$row['id'];
+        if (isset($row['graduationYear']) && $row['graduationYear'] !== null) {
+            $row['graduationYear'] = (int)$row['graduationYear'];
+        }
+        $row['role'] = $row['role'] ?? 'alumnus';
+        $row['status'] = $row['status'] ?? 'active';
+        unset($row['password_hash']);
+        return $row;
+    }
+
+    /**
      * READ ALL (C[R]UD) - Tüm kullanıcıları veritabanından getirir.
      */
     public static function all(): array
     {
         $db = self::getDb();
-        $stmt = $db->query("SELECT id, name, email, graduationYear, department, company, created_at FROM users ORDER BY id ASC");
+        $stmt = $db->query("SELECT id, name, email, graduationYear, department, company, role, status, created_at FROM users ORDER BY id ASC");
         $results = $stmt->fetchAll();
 
-        // graduationYear sayısal tipe cast edilsin
-        foreach ($results as &$row) {
-            if ($row['graduationYear'] !== null) {
-                $row['graduationYear'] = (int)$row['graduationYear'];
-            }
-            $row['id'] = (int)$row['id'];
-        }
-
-        return $results;
+        return array_map([self::class, 'formatRow'], $results);
     }
 
     /**
@@ -52,7 +59,7 @@ class User
         $db = self::getDb();
         $term = '%' . trim($keyword) . '%';
         $stmt = $db->prepare("
-            SELECT id, name, email, graduationYear, department, company, created_at 
+            SELECT id, name, email, graduationYear, department, company, role, status, created_at 
             FROM users 
             WHERE name LIKE :t OR company LIKE :t OR department LIKE :t OR email LIKE :t
             ORDER BY id ASC
@@ -60,14 +67,7 @@ class User
         $stmt->execute([':t' => $term]);
         $results = $stmt->fetchAll();
 
-        foreach ($results as &$row) {
-            if ($row['graduationYear'] !== null) {
-                $row['graduationYear'] = (int)$row['graduationYear'];
-            }
-            $row['id'] = (int)$row['id'];
-        }
-
-        return $results;
+        return array_map([self::class, 'formatRow'], $results);
     }
 
     /**
@@ -76,7 +76,7 @@ class User
     public static function find(int $id): ?array
     {
         $db = self::getDb();
-        $stmt = $db->prepare("SELECT id, name, email, graduationYear, department, company, created_at FROM users WHERE id = :id");
+        $stmt = $db->prepare("SELECT id, name, email, graduationYear, department, company, role, status, created_at FROM users WHERE id = :id");
         $stmt->execute([':id' => $id]);
         $user = $stmt->fetch();
 
@@ -84,12 +84,178 @@ class User
             return null;
         }
 
-        $user['id'] = (int)$user['id'];
-        if ($user['graduationYear'] !== null) {
-            $user['graduationYear'] = (int)$user['graduationYear'];
+        return self::formatRow($user);
+    }
+
+    /**
+     * E-posta adresine göre kullanıcı arar (password_hash hariç).
+     */
+    public static function findByEmail(string $email): ?array
+    {
+        $db = self::getDb();
+        $stmt = $db->prepare("SELECT id, name, email, graduationYear, department, company, role, status, created_at FROM users WHERE LOWER(email) = LOWER(:email) LIMIT 1");
+        $stmt->execute([':email' => trim($email)]);
+        $user = $stmt->fetch();
+
+        return $user ? self::formatRow($user) : null;
+    }
+
+    // =========================================================================
+    // KİMLİK DOĞRULAMA & KAYIT (AUTHENTICATION & REGISTRATION) - Hafta 09
+    // =========================================================================
+
+    /**
+     * Kayıt işlemi öncesinde users tablosunda password_hash sütununun varlığını doğrular.
+     * Migrasyon 010 henüz uygulanmadıysa sadece password_hash sütununu ve 010 kaydını güvenle ekler.
+     */
+    public static function ensureAuthColumns(): void
+    {
+        $db = self::getDb();
+        $driver = $db->getAttribute(PDO::ATTR_DRIVER_NAME);
+        $hasColumn = false;
+
+        if ($driver === 'sqlite') {
+            $cols = $db->query("PRAGMA table_info(users)")->fetchAll();
+            foreach ($cols as $col) {
+                if (($col['name'] ?? '') === 'password_hash') {
+                    $hasColumn = true;
+                    break;
+                }
+            }
+        } else {
+            $stmt = $db->query("SHOW COLUMNS FROM users LIKE 'password_hash'");
+            $hasColumn = (bool)$stmt->fetch();
         }
 
-        return $user;
+        if (!$hasColumn) {
+            $db->exec("ALTER TABLE users ADD COLUMN password_hash VARCHAR(255)");
+            $db->exec("CREATE INDEX IF NOT EXISTS idx_users_role ON users(role)");
+            $db->exec("CREATE INDEX IF NOT EXISTS idx_users_status ON users(status)");
+
+            // Migrasyon tablosu mevcutsa 010'u kayıt altına al
+            try {
+                $stmt = $db->prepare("INSERT OR IGNORE INTO migrations (migration) VALUES (:m)");
+                $stmt->execute([':m' => '010_add_password_hash_to_users_table.sql']);
+            } catch (\Exception $e) {
+                // migrations tablosu yoksa sessizce geç
+            }
+        }
+    }
+
+    /**
+     * Kayıt formundan veya API'den gelen verileri ddd.md RBAC ve güvenlik kurallarına göre doğrular.
+     */
+    public static function validateRegistration(array $data, bool $requireTerms = true): array
+    {
+        $errors = [];
+
+        // 1. Ad Soyad
+        $name = trim($data['name'] ?? '');
+        if ($name === '') {
+            $errors['name'] = 'Ad ve Soyad alanı zorunludur.';
+        } elseif (mb_strlen($name) < 2) {
+            $errors['name'] = 'Ad Soyad en az 2 karakter olmalıdır.';
+        } elseif (mb_strlen($name) > 150) {
+            $errors['name'] = 'Ad Soyad en fazla 150 karakter olabilir.';
+        }
+
+        // 2. E-Posta (Zorunlu + Format + Benzersizlik)
+        $email = trim($data['email'] ?? '');
+        if ($email === '') {
+            $errors['email'] = 'E-posta adresi zorunludur.';
+        } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $errors['email'] = 'Geçerli bir e-posta adresi giriniz (örn: ad.soyad@alumni.iu.edu.tr).';
+        } elseif (self::findByEmail($email) !== null) {
+            $errors['email'] = 'Bu e-posta adresi sistemde zaten kayıtlıdır.';
+        }
+
+        // 3. Rol Denetimi (ddd.md Bölüm 8.4 - Anti-Privilege Escalation)
+        $role = trim($data['role'] ?? 'alumnus');
+        $allowedSelfRoles = ['alumnus', 'student'];
+        if (!in_array($role, $allowedSelfRoles, true)) {
+            $errors['role'] = 'Kayıt formundan yalnızca Mezun (alumnus) veya Öğrenci (student) rolü seçilebilir. Admin veya Akademisyen rolleri dışarıdan atanamaz.';
+        }
+
+        // 4. Bölüm
+        $department = trim($data['department'] ?? '');
+        if ($department === '') {
+            $errors['department'] = 'Bölüm bilgisi zorunludur.';
+        } elseif (mb_strlen($department) > 150) {
+            $errors['department'] = 'Bölüm adı en fazla 150 karakter olabilir.';
+        }
+
+        // 5. Mezuniyet / Beklenen Mezuniyet Yılı
+        $yearRaw = trim((string)($data['graduationYear'] ?? ''));
+        if ($role === 'alumnus' && $yearRaw === '') {
+            $errors['graduationYear'] = 'Mezun rolü için mezuniyet yılı zorunludur.';
+        } elseif ($yearRaw !== '') {
+            if (!is_numeric($yearRaw) || (int)$yearRaw < 1950 || (int)$yearRaw > 2040) {
+                $errors['graduationYear'] = 'Mezuniyet yılı 1950 ile 2040 arasında geçerli bir yıl olmalıdır.';
+            }
+        }
+
+        // 6. Şirket (Opsiyonel)
+        $company = trim($data['company'] ?? '');
+        if ($company !== '' && mb_strlen($company) > 150) {
+            $errors['company'] = 'Şirket / Kurum adı en fazla 150 karakter olabilir.';
+        }
+
+        // 7. Parola Güçlülük Kontrolü
+        $password = (string)($data['password'] ?? '');
+        if ($password === '') {
+            $errors['password'] = 'Parola alanı zorunludur.';
+        } elseif (mb_strlen($password) < 6) {
+            $errors['password'] = 'Parola en az 6 karakter uzunluğunda olmalıdır.';
+        } elseif (!preg_match('/[A-Za-z]/', $password) || !preg_match('/[0-9]/', $password)) {
+            $errors['password'] = 'Parola güvenlik kuralı gereği en az 1 harf ve 1 rakam içermelidir.';
+        }
+
+        // 8. Parola Tekrarı
+        if ($requireTerms || array_key_exists('password_confirm', $data)) {
+            $passwordConfirm = (string)($data['password_confirm'] ?? '');
+            if ($password !== $passwordConfirm) {
+                $errors['password_confirm'] = 'Girilen parolalar birbiriyle eşleşmiyor.';
+            }
+        }
+
+        // 9. Kullanım Koşulları Onayı
+        if ($requireTerms && empty($data['terms'])) {
+            $errors['terms'] = 'Devam etmek için kullanım koşullarını ve rol yetkilendirme kurallarını onaylamalısınız.';
+        }
+
+        return $errors;
+    }
+
+    /**
+     * Yeni kullanıcı kaydı oluşturur (Parola Bcrypt ile hashlenir).
+     */
+    public static function register(array $data): array
+    {
+        self::ensureAuthColumns();
+
+        $db = self::getDb();
+        $role = in_array($data['role'] ?? 'alumnus', ['alumnus', 'student'], true)
+            ? $data['role']
+            : 'alumnus';
+
+        $stmt = $db->prepare("
+            INSERT INTO users (name, email, password_hash, graduationYear, department, company, role, status) 
+            VALUES (:name, :email, :password_hash, :graduationYear, :department, :company, :role, :status)
+        ");
+
+        $stmt->execute([
+            ':name'           => trim($data['name']),
+            ':email'          => strtolower(trim($data['email'])),
+            ':password_hash'  => password_hash((string)$data['password'], PASSWORD_BCRYPT),
+            ':graduationYear' => isset($data['graduationYear']) && $data['graduationYear'] !== '' ? (int)$data['graduationYear'] : null,
+            ':department'     => trim($data['department'] ?? 'Yönetim Bilişim Sistemleri'),
+            ':company'        => isset($data['company']) && trim($data['company']) !== '' ? trim($data['company']) : null,
+            ':role'           => $role,
+            ':status'         => 'active',
+        ]);
+
+        $newId = (int)$db->lastInsertId();
+        return self::find($newId);
     }
 
     /**

@@ -93,6 +93,9 @@
                         <div class="flex-grow-1">
                             <div class="d-flex align-items-center gap-2 flex-wrap">
                                 <h2 class="h3 fw-bold mb-0 text-dark"><?= htmlspecialchars($user['name']) ?></h2>
+                                <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle">
+                                    🛡️ <?= htmlspecialchars($user['role'] ?? 'alumnus') ?>
+                                </span>
                                 <span class="badge bg-success-subtle text-success">
                                     ● <?= htmlspecialchars($user['status'] ?? 'active') ?>
                                 </span>

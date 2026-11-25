@@ -77,6 +77,9 @@
                     <li class="nav-item"><a class="nav-link" href="/about">ℹ️ Hakkında</a></li>
                 </ul>
                 <div class="d-flex gap-2">
+                    <a href="/register" class="btn btn-outline-primary btn-sm px-3 fw-semibold">
+                        📝 Kayıt Ol
+                    </a>
                     <button class="btn btn-primary btn-sm px-3 fw-semibold" data-bs-toggle="modal" data-bs-target="#addUserModal">
                         ➕ Yeni Mezun Ekle
                     </button>
@@ -156,7 +159,7 @@
                             <th>Bölüm</th>
                             <th>Güncel Şirket / Kurum</th>
                             <th>Mezuniyet Yılı</th>
-                            <th>Durum</th>
+                            <th>Rol & Durum</th>
                             <th class="text-end pe-4">İşlem</th>
                         </tr>
                     </thead>
@@ -199,6 +202,9 @@
                                         </span>
                                     </td>
                                     <td>
+                                        <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle me-1">
+                                            <?= htmlspecialchars($user['role'] ?? 'alumnus') ?>
+                                        </span>
                                         <span class="badge bg-success-subtle text-success">
                                             ● <?= htmlspecialchars($user['status'] ?? 'active') ?>
                                         </span>

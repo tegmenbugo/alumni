@@ -65,6 +65,7 @@ erDiagram
         int id PK
         string name
         string email UK
+        string password_hash
         int graduationYear
         string department
         string company
@@ -173,12 +174,13 @@ Sistemin ana varlığıdır. Hafta 03-05 kapsamında doğrudan PDO SQLite (`data
 | :--- | :--- | :--- | :--- | :--- |
 | `id` | `INTEGER` | PRIMARY KEY, AUTOINCREMENT | - | Benzersiz kullanıcı / mezun numarası |
 | `name` | `VARCHAR(150)` | NOT NULL | - | Mezunun ad ve soyadı |
-| `email` | `VARCHAR(191)` | UNIQUE, NULL | `NULL` | Üniversite / kurumsal e-posta adresi |
+| `email` | `VARCHAR(191)` | UNIQUE, NULL (Kayıtta NOT NULL) | `NULL` | Üniversite / kurumsal e-posta adresi |
+| `password_hash` | `VARCHAR(255)` | NULL (Kayıtta NOT NULL, Bcrypt) | `NULL` | `password_hash()` ile özetlenmiş parola (API çıktılarında asla döndürülmez) |
 | `graduationYear` | `INTEGER` | CHECK (graduationYear BETWEEN 1950 AND 2040) | `NULL` | Üniversiteden mezun olduğu veya olacağı yıl |
-| `department` | `VARCHAR(150)` | NULL | `Yönetim Bilişim Sistemleri` | Mezun olunan akademik bölüm |
+| `department` | `VARCHAR(150)` | NULL | `'Yönetim Bilişim Sistemleri'` | Mezun olunan akademik bölüm |
 | `company` | `VARCHAR(150)` | NULL | `NULL` | Güncel çalıştığı şirket veya kurum |
-| `role` | `VARCHAR(50)` | NOT NULL | `'alumnus'` | Sistem rolü (`alumnus`, `student`, `admin`, `faculty`) |
-| `status` | `VARCHAR(30)` | NOT NULL | `'active'` | Hesap durumu (`active`, `pending`, `suspended`) |
+| `role` | `VARCHAR(50)` | NOT NULL, CHECK (role IN ('student','alumnus','faculty','admin')) | `'alumnus'` | Sistem yetkilendirme rolü (`student`, `alumnus`, `faculty`, `admin`) |
+| `status` | `VARCHAR(30)` | NOT NULL, CHECK (status IN ('active','pending','suspended')) | `'active'` | Hesap durumu (`active`, `pending`, `suspended`) |
 | `created_at` | `DATETIME` | NOT NULL | `CURRENT_TIMESTAMP` | Kaydın veritabanına eklenme zamanı |
 | `updated_at` | `DATETIME` | NULL | `CURRENT_TIMESTAMP` | Kaydın son güncellenme zamanı |
 
@@ -294,22 +296,25 @@ Aşağıdaki SQL betiği, SQLite ve MySQL motorlarında tam uyumlu çalışacak 
 -- ALUMNI TRACKING SYSTEM - DDL SCHEMA DEFINITION
 -- =============================================================================
 
--- 1. USERS TABLOSU (Aktif Çekirdek Tablo)
+-- 1. USERS TABLOSU (Aktif Çekirdek Tablo - Auth & RBAC Güncellemesi)
 CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name VARCHAR(150) NOT NULL,
     email VARCHAR(191) UNIQUE,
+    password_hash VARCHAR(255),
     graduationYear INTEGER CHECK (graduationYear BETWEEN 1950 AND 2040),
     department VARCHAR(150) DEFAULT 'Yönetim Bilişim Sistemleri',
     company VARCHAR(150),
-    role VARCHAR(50) DEFAULT 'alumnus',
-    status VARCHAR(30) DEFAULT 'active',
+    role VARCHAR(50) DEFAULT 'alumnus' CHECK (role IN ('student', 'alumnus', 'faculty', 'admin')),
+    status VARCHAR(30) DEFAULT 'active' CHECK (status IN ('active', 'pending', 'suspended')),
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_users_grad_year ON users(graduationYear);
+CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);
+CREATE INDEX IF NOT EXISTS idx_users_status ON users(status);
 
 -- 2. PROFILES TABLOSU (1:1 Genişletilmiş Profil)
 CREATE TABLE IF NOT EXISTS profiles (
@@ -582,12 +587,68 @@ Sistemin veriyi unutmadığını test etmek için aşağıdaki 4 adım izlenir:
 
 ---
 
-## 🔒 8. Veri Bütünlüğü ve Güvenlik İlkeleri (Data Integrity)
+## 🔒 8. Veri Bütünlüğü, Güvenlik ve Rol Tabanlı Yetkilendirme (Auth & RBAC)
 
-1. **SQL Injection Koruması:** `App\Models\User` sınıfında doğrudan dinamik dize birleştirme (`$query = "..." . $val`) **kesinlikle yasaktır.** Tüm veritabanı sorguları PDO Prepared Statements (`$stmt->prepare()` ve `$stmt->execute()`) üzerinden parametrik olarak yürütülür.
+### 8.1. Veri Bütünlüğü ve Güvenlik İlkeleri (Data Integrity)
+1. **SQL Injection Koruması:** `App\Models\*` sınıflarında doğrudan dinamik dize birleştirme (`$query = "..." . $val`) **kesinlikle yasaktır.** Tüm veritabanı sorguları PDO Prepared Statements (`$stmt->prepare()` ve `$stmt->execute()`) üzerinden parametrik olarak yürütülür.
 2. **ACID İşlem Güvenliği:** SQLite veritabanı motoru varsayılan olarak atomik yazma (atomic commits) ve WAL (Write-Ahead Logging) modunu destekler.
-3. **Girdi Doğrulama (Sanitization & Validation):** Web ve API denetleyicileri (`UserController` ve `ApiUserController`), boş alanları, geçersiz e-postaları ve mezuniyet yılı aralıklarını (1950 - 2040) model seviyesinde filtreler.
-4. **Çapraz Site Betik Koruması (XSS):** Tüm View katmanlarında (`views/users/*.php`) veriler ekrana basılırken `htmlspecialchars($val, ENT_QUOTES, 'UTF-8')` süzgecinden geçirilir.
+3. **Girdi Doğrulama (Sanitization & Validation):** Web ve API denetleyicileri (`AuthController`, `UserController`, `ApiUserController`, `ApiJobController`), boş alanları, geçersiz e-postaları ve mezuniyet yılı aralıklarını (1950 - 2040) model seviyesinde filtreler.
+4. **Çapraz Site Betik Koruması (XSS):** Tüm View katmanlarında (`views/**/*.php`) veriler ekrana basılırken `htmlspecialchars($val, ENT_QUOTES, 'UTF-8')` süzgecinden geçirilir.
+5. **Parola Güvenliği ve Gizlilik:** Kullanıcı parolaları hiçbir zaman düz metin (plain-text) saklanmaz; `password_hash($password, PASSWORD_BCRYPT)` ile özetlenerek `users.password_hash` sütununda tutulur ve `password_verify()` ile doğrulanır. API yanıtları ve Model getter'ları (`User::all()`, `User::find()`, `User::search()`) `password_hash` alanını **asla** dışarı sızdırmaz.
+
+---
+
+### 8.2. Sistem Rolleri (User Roles)
+Alumni Tracking System, üniversite ekosistemindeki aktörleri 5 ayrı erişim seviyesinde modeller:
+
+| Rol (`users.role`) | Türkçe Tanımı | Sistemdeki Konumu ve Sorumluluğu |
+| :--- | :--- | :--- |
+| **`guest`** | **Ziyaretçi** *(Oturumsuz)* | Sisteme henüz giriş yapmamış / kayıt olmamış kullanıcı. Yalnızca herkese açık vitrin sayfalarını ve açık ilan özetlerini görür. |
+| **`student`** | **Aktif İÜ Öğrencisi** | Halen öğrenimine devam eden öğrenci. Mezun ağını inceleyebilir, staj/iş ilanlarına **başvuru yapabilir**, ancak kendi adına **iş ilanı açamaz**. |
+| **`alumnus`** | **Mezun** *(Varsayılan)* | İstanbul Üniversitesi mezunu. Kendi profilini ve kariyer geçmişini yönetir, şirketleri adına **iş/staj ilanı yayınlayabilir**, diğer ilanlara **başvurabilir**. |
+| **`faculty`** | **Öğretim Üyesi** | İÜ YBS akademisyenleri. Mezun ağını, bölüm istatistiklerini ve tüm ilanları görüntüler; staj/iş ilanı açabilir, mezun ve öğrencilere akademik referans doğrulaması sağlar. |
+| **`admin`** | **Sistem Yöneticisi** | Tam yetkili yönetici. Tüm hesapları onaylar/askıya alır (`active`, `pending`, `suspended`), tüm ilanları modere eder, sistem loglarını (`logs/error.logs`) ve migrasyonları yönetir. |
+
+---
+
+### 8.3. Yetkilendirme ve Özellik Erişim Matrisi (Authorization & Feature Access Matrix)
+Sistemdeki hangi kullanıcının/rolün hangi özelliğe erişebileceğini tanımlayan resmi erişim kuralı tablosudur:
+
+| Özellik / Rota (Feature & Endpoint) | `guest` | `student` | `alumnus` | `faculty` | `admin` | Yetki ve Sahiplik Kuralı (Access Policy) |
+| :--- | :---: | :---: | :---: | :---: | :---: | :--- |
+| **Vitrin & Bilgi Sayfaları** (`GET /`, `/about`, `/404`, `/api/health`) | ✅ | ✅ | ✅ | ✅ | ✅ | Herkese açık (Public Read). |
+| **Kayıt Olma** (`GET /register`, `POST /register`, `POST /api/auth/register`) | ✅ | ❌ | ❌ | ❌ | ❌ | Yalnızca oturum açmamış ziyaretçiler kayıt olabilir (`student` veya `alumnus` seçilebilir). |
+| **Swagger API Dokümantasyonu** (`GET /api/swagger`, `/api/openapi.json`) | ✅ | ✅ | ✅ | ✅ | ✅ | Geliştirici ve akademik denetim için herkese açık. |
+| **Mezun Rehberini Görüntüleme** (`GET /users`, `GET /api/users`) | ⚠️ Kısıtlı | ✅ | ✅ | ✅ | ✅ | `guest` yalnızca temel liste özetini görür (kişisel e-posta/iletişim gizli); giriş yapan tüm roller tam rehberi görür. |
+| **Mezun Profili Görüntüleme** (`GET /users/{id}`, `GET /api/users/{id}`) | ❌ `401` | ✅ | ✅ | ✅ | ✅ | Detaylı mezun profili görmek için oturum açmak zorunludur. |
+| **Kendi Profilini Düzenleme** (`GET/POST /users/{id}/edit`, `PUT/PATCH /api/users/{id}`) | ❌ `401` | ✅ *(Kendi)* | ✅ *(Kendi)* | ✅ *(Kendi)* | ✅ *(Tümü)* | **Sahiplik Kuralı (Ownership):** Normal roller yalnızca `auth.id === target.id` kaydını düzenleyebilir; aksi halde `403 Forbidden`. |
+| **Kullanıcı Silme & Rol/Statü Değiştirme** (`POST /users/{id}/delete`, `DELETE /api/users/{id}`) | ❌ `401` | ❌ `403` | ❌ `403` | ❌ `403` | ✅ *(Tümü)* | Başka bir kullanıcıyı silmek veya rolünü `admin`/`faculty` yapmak yalnızca `admin` yetkisindedir. |
+| **İş & Staj İlanlarını Listeleme / Detay** (`GET /jobs`, `GET /jobs/{id}`, `GET /api/jobs`) | ✅ *(Aktif)* | ✅ | ✅ | ✅ | ✅ *(Tümü)* | `guest` yalnızca `status = 'active'` ilanları görür; `admin` taslak (`draft`) ve kapalı (`closed`) ilanları da görür. |
+| **Yeni İş / Staj İlanı Yayınlama** (`POST /jobs`, `POST /api/jobs`, `POST /api/users/{id}/jobs`) | ❌ `401` | ❌ `403` | ✅ | ✅ | ✅ | **Öğrenciler iş ilanı yayınlayamaz (`403 Forbidden`).** İlan açma yetkisi yalnızca `alumnus`, `faculty` ve `admin` rollerine aittir. |
+| **İlanı Güncelleme / Kapatma / Silme** (`PUT/DELETE /api/jobs/{id}`) | ❌ `401` | ❌ `403` | ✅ *(Kendi)* | ✅ *(Kendi)* | ✅ *(Tümü)* | **Sahiplik Kuralı:** `alumnus` ve `faculty` yalnızca kendi açtığı (`posted_by_user_id === auth.id`) ilanı düzenleyebilir/silebilir. |
+| **İlana Başvuru Yapma** (`POST /jobs/{id}/apply`, `POST /api/jobs/{id}/applications`) | ❌ `401` | ✅ | ✅ | ❌ `403` | ❌ `403` | Yalnızca `student` ve `alumnus` aktif ilanlara başvurabilir. **Kendi İlanına Başvuru Yasağı:** İlan sahibi kendi ilanı için başvuru yapamaz. |
+| **Kendi Başvurularını Takip / Geri Çekme** (`GET /api/users/{id}/applications`) | ❌ `401` | ✅ *(Kendi)* | ✅ *(Kendi)* | ❌ `403` | ✅ *(Tümü)* | Kullanıcı yalnızca kendi başvurularını (`applicant_user_id === auth.id`) görebilir ve `withdrawn` durumuna çekebilir. |
+| **İlana Gelen Başvuruları İnceleme & Kabul/Ret** (`GET /api/jobs/{id}/applications`, `PATCH /api/applications/{id}`) | ❌ `401` | ❌ `403` | ✅ *(Kendi İlanı)* | ✅ *(Kendi İlanı)* | ✅ *(Tümü)* | Başvuruları görüntüleme ve `reviewing`/`interview`/`accepted`/`rejected` güncellemesi yalnızca ilanın sahibine (`posted_by_user_id === auth.id`) veya `admin`'e aittir. |
+| **Sistem Yönetimi, Migrasyonlar & Loglar** (`GET /api/migrations`, `logs/error.logs`, `/api/test-500`) | ❌ `401` | ❌ `403` | ❌ `403` | ❌ `403` | ✅ | Üretim (Production) modunda yalnızca `admin` rolü sistem altyapısı ve hata günlüklerine erişebilir. |
+
+---
+
+### 8.4. Yetkilendirme İş Kuralları (Authorization Business Rules & Security Invariants)
+Sistemin güvenliğini sağlamak amacıyla koyduğumuz zorunlu yetkilendirme kuralları:
+1. **Ayrıcalık Yükseltme Engeli (Anti-Privilege Escalation Rule):**  
+   * `/register` ve `/api/auth/register` uç noktalarından kayıt olan bir kullanıcı formdan yalnızca **`student`** veya **`alumnus`** rolünü seçebilir.  
+   * Dışarıdan manipülasyonla `role=admin` veya `role=faculty` gönderilmesi halinde sistem isteği **`403 Forbidden` / `422 Unprocessable Content`** ile reddeder. `faculty` ve `admin` rolleri yalnızca mevcut bir `admin` tarafından veya doğrudan veritabanı seed/CLI aracılığıyla atanabilir.
+2. **Hesap Durumu Denetimi (`users.status` Enforcement):**  
+   * **`active`:** Rolüne tanımlı tüm izinleri kullanabilir.  
+   * **`pending`:** Yeni kayıt olmuş ancak henüz doğrulanmamış hesap; yalnızca okuma yapabilir, yeni iş ilanı açamaz (`403`).  
+   * **`suspended`:** Yönetici tarafından askıya alınmış hesap; giriş, ilan açma ve başvuru dahil tüm aksiyonları kilitlidir (`403 Forbidden`).
+3. **Sahiplik Doğrulaması (Resource Ownership Check):**  
+   * Herhangi bir kaynak üzerinde güncelleme/silme yapılırken yalnızca rol yeterli değildir; kullanıcının ID'si (`auth_user.id`) ile hedefin sahip ID'si (`posted_by_user_id`, `applicant_user_id`, `user_id`) eşleşmelidir (`admin` hariç).
+4. **Kendi İlanına Başvuru Yasağı (Conflict of Interest):**  
+   * Bir mezun (`alumnus`), kendi oluşturduğu iş ilanına (`job.posted_by_user_id === auth.id`) aday olarak başvuramaz.
+5. **Standart Yetki Hata Kodları:**  
+   * **`401 Unauthorized`:** Kimlik doğrulanmamış (`guest`) kullanıcının korumalı bir uç noktaya erişmeye çalışması.  
+   * **`403 Forbidden`:** Kimliği doğrulanmış kullanıcının rolünün veya kaynak sahipliğinin ilgili işlem için yetersiz olması.
 
 ---
 
@@ -695,6 +756,7 @@ Sistem mimarisine sunucu kararlılığını ve hata izlenebilirliğini sağlayan
 | `007_seed_initial_data.sql` | İÜ YBS mezunları ve sentetik tohum verisi | Tüm tablolar |
 | `008_update_job_postings_table.sql` | (Hafta 06) İlan tablosu genişletme (workplace, salary, requirements) | `job_postings` |
 | `009_update_job_applications_table.sql` | (Hafta 06) Başvuru tablosu genişletme (resume, portfolio, notes, interview) | `job_applications` |
+| `010_add_password_hash_to_users_table.sql` | (Hafta 09) Kullanıcı kayıt (Register) ve parola özeti (`password_hash`) ile rol/durum indeksleri | `users` |
 
 ### CLI ve API Üzerinden Çalıştırma:
 ```bash
@@ -740,4 +802,4 @@ Sistemin ilk açılışta zengin ve dinamik mezun verileriyle dolup taşması i�
 * [x] **Hafta 06:** Çoklu tablo ilişkileri (`job_postings`, `job_applications`), doğrudan ve iç içe (nested) rotalar, bekleyen migrasyonlar (008, 009) ve iş ilanları web arayüzü (UI).
 * [x] **Hafta 07:** İş Kuralları (Business Rules & Validation Contract), Postman geçersiz istek testleri, `LoggerMiddleware` (terminal ve dosya kaydı), `NotFoundGuardianMiddleware` (404 Guardian) ve `ServerErrorGuardianMiddleware` (5xx Guardian).
 * [x] **Hafta 08:** Geçici Dalda İş Akışı (`feature/homepage-design`), Marka Rehberi ([brand.md](./brand.md)) ve [VoltAgent/awesome-design-md](https://github.com/VoltAgent/awesome-design-md) standartlarında Tasarım Şartnamesi ([DESIGN.md](./DESIGN.md)).
-* [ ] **Hafta 09:** Ara Katmanlar & Güvenlik (Middleware - The Bouncer).
+* [x] **Hafta 09:** Yetkilendirme Mimarisi (RBAC Rol Matrisi: `guest`, `student`, `alumnus`, `faculty`, `admin`), Sahiplik Kuralları, Kayıt Sayfası (`/register`), `AuthController`, `password_hash` Güvenliği ve `010_add_password_hash_to_users_table.sql`.

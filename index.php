@@ -32,6 +32,7 @@ use App\Controllers\JobPostingController;
 use App\Controllers\ApiJobController;
 use App\Controllers\ApiApplicationController;
 use App\Controllers\ErrorController;
+use App\Controllers\AuthController;
 
 // 2. Global CORS Başlıkları
 header('Access-Control-Allow-Origin: *');
@@ -51,6 +52,13 @@ $router->get('/hello/{name}',     [HomeController::class, 'helloName']);
 $router->get('/sum/{a}/{b}',      [HomeController::class, 'sum']);
 $router->get('/about',            [HomeController::class, 'about']);
 $router->get('/404',              [ErrorController::class, 'notFound']); // Hafta 07 (Görev 7): Generic 404 Sayfası
+
+// -------------------------------------------------------------
+// KİMLİK DOĞRULAMA & KAYIT ROTALARI (Hafta 09 - Auth & RBAC)
+// -------------------------------------------------------------
+$router->get('/register',          [AuthController::class, 'showRegister']);
+$router->post('/register',         [AuthController::class, 'register']);
+$router->post('/api/auth/register',[AuthController::class, 'apiRegister']);
 
 // -------------------------------------------------------------
 // SİSTEM, DOKÜMANTASYON & MİGRASYON ROTALARI (Week 03 & Week 05)

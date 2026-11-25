@@ -110,7 +110,8 @@ alumni/
 │       ├── 006_create_job_postings_tables.sql
 │       ├── 007_seed_initial_data.sql
 │       ├── 008_update_job_postings_table.sql      # [Hafta 06] Bekleyen ilan migrasyonu
-│       └── 009_update_job_applications_table.sql  # [Hafta 06] Bekleyen başvuru migrasyonu
+│       ├── 009_update_job_applications_table.sql  # [Hafta 06] Bekleyen başvuru migrasyonu
+│       └── 010_add_password_hash_to_users_table.sql # [Hafta 09] Kayıt & Auth parola özeti migrasyonu
 │
 ├── data/                               # [KALICI VERİ DEPOSU (Volume)]
 │   ├── alumni.sqlite                   # SQLite veritabanı dosyası
@@ -146,6 +147,7 @@ alumni/
 │       ├── ApiJobController.php        # [REST API Controller] Doğrudan ve iç içe ilan API'leri (/api/jobs)
 │       ├── ApiApplicationController.php# [REST API Controller] Doğrudan başvuru API'leri (/api/applications)
 │       ├── HomeController.php          # Web sayfaları (/, /hello, /sum, /about, /Alumni)
+│       ├── AuthController.php          # [Kimlik & Kayıt - Hafta 09] Kayıt ol (/register, /api/auth/register)
 │       ├── ErrorController.php         # [Hata Yöneticisi - Hafta 07] Generic 404 ekranı ve yönlendirme (/404)
 │       └── ApiController.php           # Sistem sağlığı (/api/health), Migrasyonlar (/api/migrations), /api/test-500 ve Swagger
 │
@@ -153,6 +155,8 @@ alumni/
 │   ├── home.php                        # Ana kontrol paneli ve uç nokta test arayüzü
 │   ├── about.php                       # Proje hakkında sayfası
 │   ├── swagger.php                     # Swagger UI canlı dokümantasyon sayfası
+│   ├── auth/                           # [KİMLİK DOĞRULAMA - Hafta 09]
+│   │   └── register.php                # Rol seçimli (Mezun/Öğrenci) yeni kullanıcı kayıt sayfası
 │   ├── errors/                         # [HATA ŞABLONLARI - Hafta 07 (Görev 7)]
 │   │   └── 404.php                     # Generic 404 sayfası ve otomatik geri sayımlı redirect
 │   ├── users/                          # Mezun web arayüz şablonları (index, show, edit)
@@ -352,6 +356,19 @@ Dersin ve modern yazılım mühendisliğinin temel ilkelerinden biri olan **Gör
 
 ---
 
+## 🔐 Hafta 09: Yetkilendirme (RBAC) ve Kayıt Sayfası (`/register`)
+
+1. **Rol Tabanlı Yetkilendirme Matrisi ([ddd.md Bölüm 8](./ddd.md#-8-veri-bütünlüğü-güvenlik-ve-rol-tabanlı-yetkilendirme-auth--rbac)):**
+   * 5 sistem rolü tanımlandı: `guest`, `student`, `alumnus`, `faculty`, `admin`.
+   * Her rolün erişebileceği web sayfaları ve REST API rotaları (ilan açma, başvuru yapma, profil düzenleme, yönetim) ile sahiplik (ownership) kuralları sözleşmeye bağlandı.
+   * **Ayrıcalık Yükseltme Engeli:** Kayıt formundan (`POST /register`, `POST /api/auth/register`) `admin` veya `faculty` rolü seçilemez (`403 Forbidden`).
+2. **Kayıt Ol Sayfası ve İşlevselliği ([`views/auth/register.php`](./views/auth/register.php) & [`AuthController.php`](./src/Controllers/AuthController.php)):**
+   * **Rotalar:** `GET /register`, `POST /register`, `POST /api/auth/register`.
+   * **Alanlar & Doğrulama:** Ad Soyad, Benzersiz E-posta, Rol seçimi (`Mezun` / `Öğrenci`), Bölüm, Mezuniyet Yılı (1950–2040), Şirket (opsiyonel), Bcrypt şifreli Parola (min 6 karakter, harf+rakam), Parola Tekrar ve Koşul Onayı.
+   * **Veritabanı:** `010_add_password_hash_to_users_table.sql` ile `password_hash` sütunu tanımlandı (API ve Model çıktılarında asla sızdırılmaz).
+
+---
+
 ## 🗓️ Dönem Yol Haritası (Fourteen Weeks Roadmap)
 
 * [x] **Week 01:** Project inception & fundamentals, repository setup, stack selection & justification.
@@ -362,7 +379,7 @@ Dersin ve modern yazılım mühendisliğinin temel ilkelerinden biri olan **Gör
 * [x] **Week 06:** Database integration & multi-table relationships — Updated `job_postings` table in `ddd.md`, created `008_update_job_postings_table.sql` migration (pending/unmigrated), and implemented `JobPosting` & `JobApplication` relational models with `User` relationships.
 * [x] **Week 07:** Business Rules, Validation Contract, Logger Middleware, 404 & 5xx Guardians, Persistent File Logging (`logs/error.logs`), Generic 404 Page & Invalid Request Redirect.
 * [x] **Week 08:** Feature Branching Workflow (`git checkout -b feature/homepage-design` & return to `main`), Modern Alumni Portal Homepage, Brand Identity Guidelines ([brand.md](./brand.md)) & Design System Specification ([DESIGN.md](./DESIGN.md) via VoltAgent standard).
-* [ ] **Week 09:** Middleware — the bouncer.
+* [x] **Week 09:** Authorization & Registration — RBAC Roles & Feature Access Matrix in `ddd.md` Section 8, Bcrypt `password_hash` security, `AuthController`, `views/auth/register.php` (`/register` & `/api/auth/register`), and privilege escalation protection.
 * [ ] **Week 10:** Views & front-end integration.
 * [ ] **Week 11:** Authentication & authorization.
 * [ ] **Week 12:** Service layers.
