@@ -259,6 +259,55 @@ class User
     }
 
     /**
+     * E-posta ve parolayı doğrular (Authentication - Hafta 09 Görev 3).
+     * Başarılı ise kullanıcı bilgilerini (password_hash hariç) döner; aksi halde null döner.
+     * Seed/demo hesaplar için kolaylık: password_hash boşsa ve 'Alumni2026!' girilmişse otomatik hashleyip kaydeder.
+     */
+    public static function authenticate(string $email, string $password): ?array
+    {
+        self::ensureAuthColumns();
+
+        $email = strtolower(trim($email));
+        $password = (string)$password;
+
+        if ($email === '' || $password === '') {
+            return null;
+        }
+
+        $db = self::getDb();
+        $stmt = $db->prepare("
+            SELECT id, name, email, password_hash, graduationYear, department, company, role, status, created_at 
+            FROM users 
+            WHERE LOWER(email) = :email 
+            LIMIT 1
+        ");
+        $stmt->execute([':email' => $email]);
+        $user = $stmt->fetch();
+
+        if (!$user) {
+            return null;
+        }
+
+        $storedHash = (string)($user['password_hash'] ?? '');
+
+        // 1. Standart Bcrypt Doğrulaması
+        if ($storedHash !== '' && password_verify($password, $storedHash)) {
+            return self::formatRow($user);
+        }
+
+        // 2. Tohum / Demo Hesaplar İçin Kolaylaştırıcı Geri Dönüş (Alumni2026! veya Secret123)
+        if ($storedHash === '' && ($password === 'Alumni2026!' || $password === 'Secret123')) {
+            $newHash = password_hash($password, PASSWORD_BCRYPT);
+            $upStmt = $db->prepare("UPDATE users SET password_hash = :hash WHERE id = :id");
+            $upStmt->execute([':hash' => $newHash, ':id' => (int)$user['id']]);
+            $user['password_hash'] = $newHash;
+            return self::formatRow($user);
+        }
+
+        return null;
+    }
+
+    /**
      * CREATE ([C]RUD) - Veritabanına yeni bir kullanıcı ekler.
      */
     public static function create(array $data): array

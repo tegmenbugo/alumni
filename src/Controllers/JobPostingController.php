@@ -6,6 +6,7 @@ use App\Models\JobApplication;
 use App\Models\User;
 use App\Core\View;
 use App\Core\Response;
+use App\Middlewares\AuthMiddleware;
 
 /**
  * JobPostingController (MVC - Web View Katmanı)
@@ -66,14 +67,20 @@ class JobPostingController
 
     /**
      * POST /jobs - Yeni İlan Yayınlama (Web Formu)
+     * ddd.md Bölüm 8.3: Yalnızca alumnus, faculty ve admin iş ilanı yayınlayabilir.
+     * student rolündeki kullanıcılar 403 Forbidden alır.
      */
     public function store(): void
     {
+        // Hafta 09 (Görev 4): AuthMiddleware - İlan yayınlama yetki kontrolü
+        $authUser = AuthMiddleware::requireCanPostJob(false);
+
         $errors = JobPosting::validate($_POST);
         $message = null;
 
         if (empty($errors)) {
-            $userId = !empty($_POST['posted_by_user_id']) ? (int)$_POST['posted_by_user_id'] : 1;
+            // Oturum açmış kullanıcının ID'sini otomatik olarak ilan sahibi yap
+            $userId = (int)$authUser['id'];
             $title = trim($_POST['title']);
             $company = trim($_POST['company_name'] ?? ($_POST['company'] ?? ''));
 
@@ -116,6 +123,8 @@ class JobPostingController
 
     /**
      * POST /jobs/{id}/apply - İlana Başvuru Yapma (Web Formu)
+     * ddd.md Bölüm 8.3: Yalnızca student ve alumnus başvurabilir.
+     * Kendi ilanına başvuru yasağı (Conflict of Interest) denetlenir.
      */
     public function apply(string $id): void
     {
@@ -124,18 +133,25 @@ class JobPostingController
 
         if (!$job) {
             http_response_code(404);
-            echo "İlan bulunamadı.";
+            echo "404 - İş ilanı bulunamadı (ID: {$id})";
             exit;
         }
 
-        $applicantId = !empty($_POST['applicant_user_id']) ? (int)$_POST['applicant_user_id'] : 1;
+        // Hafta 09 (Görev 4): AuthMiddleware - Başvuru yetkisi ve çıkar çatışması kontrolü
+        $authUser = AuthMiddleware::requireCanApplyJob($job, false);
+
+        $applicantId = (int)$authUser['id'];
         $coverLetter = trim($_POST['cover_letter'] ?? '');
+        $resumeUrl   = trim($_POST['resume_url'] ?? '');
+        $portfolioUrl = trim($_POST['portfolio_url'] ?? '');
 
         JobApplication::create([
             'job_posting_id'    => $jobId,
             'applicant_user_id' => $applicantId,
-            'status'             => 'applied',
-            'cover_letter'       => $coverLetter
+            'status'            => 'applied',
+            'cover_letter'      => $coverLetter,
+            'resume_url'        => $resumeUrl !== '' ? $resumeUrl : null,
+            'portfolio_url'     => $portfolioUrl !== '' ? $portfolioUrl : null,
         ]);
 
         $applications = JobApplication::forPosting($jobId);
@@ -145,7 +161,7 @@ class JobPostingController
             'job'          => $job,
             'applications' => $applications,
             'users'        => $users,
-            'message'      => "✅ Başvurunuz başarıyla kaydedildi!"
+            'message'      => "✅ Başvurunuz başarıyla kaydedildi! ({$authUser['name']})"
         ]);
     }
 }

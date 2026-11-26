@@ -70,10 +70,11 @@
                     <li class="nav-item"><a class="nav-link" href="/api/swagger" target="_blank">📚 Swagger UI</a></li>
                     <li class="nav-item"><a class="nav-link" href="/about">ℹ️ Hakkında</a></li>
                 </ul>
-                <div class="d-flex gap-2">
+                <div class="d-flex gap-2 align-items-center flex-wrap">
                     <button class="btn btn-primary btn-sm px-3 fw-semibold" data-bs-toggle="modal" data-bs-target="#newJobModal">
                         + Yeni İlan Yayınla
                     </button>
+                    <?php include __DIR__ . '/../partials/auth_nav.php'; ?>
                 </div>
             </div>
         </div>
@@ -100,6 +101,28 @@
     </header>
 
     <main class="container mb-5" style="position: relative; z-index: 2;">
+        <?php
+            $jobsAuthUser = \App\Middlewares\AuthMiddleware::user();
+            $canPostJob = \App\Middlewares\AuthMiddleware::canPostJob($jobsAuthUser);
+        ?>
+
+        <!-- AuthMiddleware Rol & Yetki Bilgilendirme Şeridi -->
+        <?php if (!$jobsAuthUser): ?>
+            <div class="alert alert-info d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4 shadow-sm rounded-3">
+                <div class="small">
+                    🔓 <strong>Ziyaretçi (Guest)</strong> modundasınız. İş ilanlarına başvurmak veya yeni ilan açmak için giriş yapmalısınız.
+                </div>
+                <a href="/login?from=/jobs" class="btn btn-sm btn-primary fw-semibold">🔑 Giriş Yap</a>
+            </div>
+        <?php elseif (($jobsAuthUser['role'] ?? '') === 'student'): ?>
+            <div class="alert alert-warning d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4 shadow-sm rounded-3">
+                <div class="small">
+                    📚 <strong><?= htmlspecialchars($jobsAuthUser['name']) ?> (student)</strong> hesabıyla giriş yaptınız. Öğrenciler ilanlara başvurabilir; ancak <strong>yeni iş ilanı yayınlayamazlar</strong> (<code>AuthMiddleware: 403 Forbidden</code>).
+                </div>
+                <span class="badge bg-warning-subtle text-warning-emphasis border border-warning">Salt Başvuru Yetkisi</span>
+            </div>
+        <?php endif; ?>
+
         <!-- Bildirim Mesajı -->
         <?php if (!empty($message)): ?>
             <div class="alert alert-success alert-dismissible fade show d-flex align-items-center mb-4 shadow-sm" role="alert">
@@ -216,6 +239,19 @@
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body p-4 row g-3">
+                        <?php if (!$jobsAuthUser): ?>
+                            <div class="col-12">
+                                <div class="alert alert-warning mb-0 small">
+                                    🔑 Şu an oturum açmadınız. Formu gönderirseniz <code>AuthMiddleware</code> sizi giriş ekranına (<code>/login</code>) yönlendirecektir.
+                                </div>
+                            </div>
+                        <?php elseif (!$canPostJob): ?>
+                            <div class="col-12">
+                                <div class="alert alert-danger mb-0 small">
+                                    🚫 Mevcut rolünüz: <strong><?= htmlspecialchars($jobsAuthUser['role']) ?></strong>. Öğrenci rolü ilan açamaz — gönderdiğinizde <code>AuthMiddleware</code> tarafından <strong>403 Forbidden</strong> ile engellenirsiniz.
+                                </div>
+                            </div>
+                        <?php endif; ?>
                         <div class="col-md-6">
                             <label class="form-label fw-semibold small">Pozisyon Başlığı * (Maks 120 Karakter)</label>
                             <input type="text" name="title" class="form-control" placeholder="Örn: Junior Backend Developer" maxlength="120" required>
@@ -225,14 +261,9 @@
                             <input type="text" name="company_name" class="form-control" placeholder="Örn: Trendyol" maxlength="120" required>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold small">Yayınlayan Mezun *</label>
-                            <select name="posted_by_user_id" class="form-select">
-                                <?php foreach ($users as $u): ?>
-                                    <option value="<?= $u['id'] ?>">
-                                        <?= htmlspecialchars($u['name']) ?> (<?= htmlspecialchars($u['company'] ?? 'Mezun') ?>)
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
+                            <label class="form-label fw-semibold small">Yayınlayan Hesap (Oturum)</label>
+                            <input type="text" class="form-control bg-light" readonly
+                                   value="<?= $jobsAuthUser ? htmlspecialchars($jobsAuthUser['name'] . ' (' . $jobsAuthUser['role'] . ')') : 'Oturum Açılmamış (Guest)' ?>">
                         </div>
                         <div class="col-md-3">
                             <label class="form-label fw-semibold small">Çalışma Şekli</label>

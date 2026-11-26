@@ -618,6 +618,7 @@ Sistemdeki hangi kullanıcının/rolün hangi özelliğe erişebileceğini tanı
 | :--- | :---: | :---: | :---: | :---: | :---: | :--- |
 | **Vitrin & Bilgi Sayfaları** (`GET /`, `/about`, `/404`, `/api/health`) | ✅ | ✅ | ✅ | ✅ | ✅ | Herkese açık (Public Read). |
 | **Kayıt Olma** (`GET /register`, `POST /register`, `POST /api/auth/register`) | ✅ | ❌ | ❌ | ❌ | ❌ | Yalnızca oturum açmamış ziyaretçiler kayıt olabilir (`student` veya `alumnus` seçilebilir). |
+| **Giriş Yapma & Çıkış Yapma** (`GET/POST /login`, `GET/POST /logout`, `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/auth/me`) | ✅ *(Login)* | ✅ | ✅ | ✅ | ✅ | Bcrypt (`password_verify`) ile kimlik doğrulama ve session yenileme (`session_regenerate_id`); `suspended`/`pending` hesaplar engellenir (`403`). |
 | **Swagger API Dokümantasyonu** (`GET /api/swagger`, `/api/openapi.json`) | ✅ | ✅ | ✅ | ✅ | ✅ | Geliştirici ve akademik denetim için herkese açık. |
 | **Mezun Rehberini Görüntüleme** (`GET /users`, `GET /api/users`) | ⚠️ Kısıtlı | ✅ | ✅ | ✅ | ✅ | `guest` yalnızca temel liste özetini görür (kişisel e-posta/iletişim gizli); giriş yapan tüm roller tam rehberi görür. |
 | **Mezun Profili Görüntüleme** (`GET /users/{id}`, `GET /api/users/{id}`) | ❌ `401` | ✅ | ✅ | ✅ | ✅ | Detaylı mezun profili görmek için oturum açmak zorunludur. |
@@ -705,9 +706,9 @@ API uç noktalarına gönderilen geçersiz isteklere sistemin verdiği standart 
 | **9. Geçersiz / Boş JSON Gövdesi** | `{ invalid_json... }` veya boş body | `400 Bad Request` | `"error": "Geçersiz JSON sözdizimi"` veya `"Boş istek gövdesi"` |
 | **10. Olmayan İlan ID'si (GET/PUT/DELETE)** | `GET /api/jobs/99999` veya `GET /api/jobs/abc` | `404 Not Found` / `400 Bad Request` | `"error": "İş ilanı bulunamadı (ID: 99999)"` |
 
-### 9.5. HTTP Ara Katmanları ve Hata Bekçileri (Middlewares & Guardians - Hafta 07)
+### 9.5. HTTP Ara Katmanları ve Hata Bekçileri (Middlewares & Guardians - Hafta 07 & Hafta 09)
 
-Sistem mimarisine sunucu kararlılığını ve hata izlenebilirliğini sağlayan üç temel ara katman dahil edilmiştir:
+Sistem mimarisine sunucu kararlılığını, hata izlenebilirliğini ve rol bazlı yetkilendirme (RBAC) güvenliğini sağlayan dört temel ara katman dahil edilmiştir:
 
 1. **`LoggerMiddleware` (`App\Middlewares\LoggerMiddleware`):**
    * **İşlevi:** Client'tan server'a ulaşan tüm HTTP isteklerinde anında devreye girer. İstek tamamlandığında yanıt durum kodu (`http_response_code`) ve toplam süreyi (`microtime`) hesaplayarak sunucu terminaline yapısal log basar ve dosyaya kaydeder.
@@ -733,7 +734,17 @@ Sistem mimarisine sunucu kararlılığını ve hata izlenebilirliğini sağlayan
    * **Derinlemesine Loglama:** Hatanın sınıfını, sebebini, kaynak dosyasını, satırını ve tam çağrı yığınını (stack trace) `logs/error.logs` dosyasına arşivler.
    * **Test Uç Noktası:** `GET /api/test-500` rotası üzerinden 5xx Guardian'ın devreye girişi anında test edilebilir.
 
-4. **Generic 404 Sayfası ve Geçersiz İstek Yönlendirmesi (Redirect Invalid Request - Görev 7):**
+4. **`AuthMiddleware` (`App\Middlewares\AuthMiddleware` - Kimlik Doğrulama & RBAC Bekçisi - Hafta 09):**
+   * **İşlevi:** Oturum durumunu (`$_SESSION['user']`), kullanıcı rollerini (`guest`, `student`, `alumnus`, `faculty`, `admin`), kaynak sahipliğini (ownership) ve çıkar çatışması (conflict of interest) kurallarını Web ve REST API katmanlarında merkezi olarak denetler.
+   * **Temel Bekçi Metodları:**
+     * `requireAuth($isApi)`: Oturum açmamış isteklerde Web'i `/login?from=...` adresine yönlendirir, API'de `401 Unauthorized` JSON döner.
+     * `requireRole($allowedRoles, $isApi)`: Kullanıcının rolü izin verilen listede değilse Web'de `views/errors/403.php`, API'de `403 Forbidden` JSON döner.
+     * `requireCanPostJob($isApi)`: İş ilanı açma (`POST /jobs`, `POST /api/jobs`) yetkisini yalnızca `alumnus`, `faculty` ve `admin` ile sınırlar; **`student` rolünü `403 Forbidden` ile engeller.**
+     * `requireCanManageJob($job, $isApi)`: İlan güncelleme/silme ve başvuruları görüntüleme için `posted_by_user_id === auth.id` veya `admin` şartını denetler.
+     * `requireCanApplyJob($job, $isApi)`: Yalnızca `student` ve `alumnus` başvuru yapabilir; kendi ilanına başvuruyu (`Conflict of Interest`) `403 Forbidden` ile engeller.
+     * `requireCanEditUser($targetUserId, $isApi)`: Profil düzenleme/silmede `auth.id === target.id` veya `admin` sahipliğini zorunlu kılar.
+
+5. **Generic 404 & 403 Sayfaları ve Geçersiz İstek Yönlendirmesi:**
    * **Merkezi Hata Görünümü:** `views/errors/404.php` ve `App\Controllers\ErrorController::notFound` (`GET /404`).
    * **Yönlendirme Protokolü:** Sistemde tanımlı olmayan bir web rotasına istek geldiğinde, `NotFoundGuardianMiddleware` kullanıcıyı doğrudan `/404?from={path}&reason={reason}` adresine yönlendirir (HTTP 302 Redirect).
    * **Otomatik Geri Dönüş:** Generic 404 ekranında 6 saniyelik geri sayım sayacı çalışır ve kullanıcıyı otomatik olarak Ana Sayfa'ya (`/`) yönlendirir (kullanıcı isterse yönlendirmeyi butonla durdurabilir).
@@ -802,4 +813,4 @@ Sistemin ilk açılışta zengin ve dinamik mezun verileriyle dolup taşması i�
 * [x] **Hafta 06:** Çoklu tablo ilişkileri (`job_postings`, `job_applications`), doğrudan ve iç içe (nested) rotalar, bekleyen migrasyonlar (008, 009) ve iş ilanları web arayüzü (UI).
 * [x] **Hafta 07:** İş Kuralları (Business Rules & Validation Contract), Postman geçersiz istek testleri, `LoggerMiddleware` (terminal ve dosya kaydı), `NotFoundGuardianMiddleware` (404 Guardian) ve `ServerErrorGuardianMiddleware` (5xx Guardian).
 * [x] **Hafta 08:** Geçici Dalda İş Akışı (`feature/homepage-design`), Marka Rehberi ([brand.md](./brand.md)) ve [VoltAgent/awesome-design-md](https://github.com/VoltAgent/awesome-design-md) standartlarında Tasarım Şartnamesi ([DESIGN.md](./DESIGN.md)).
-* [x] **Hafta 09:** Yetkilendirme Mimarisi (RBAC Rol Matrisi: `guest`, `student`, `alumnus`, `faculty`, `admin`), Sahiplik Kuralları, Kayıt Sayfası (`/register`), `AuthController`, `password_hash` Güvenliği ve `010_add_password_hash_to_users_table.sql`.
+* [x] **Hafta 09:** Yetkilendirme Mimarisi (RBAC Rol Matrisi: `guest`, `student`, `alumnus`, `faculty`, `admin`), Sahiplik Kuralları, Kayıt Sayfası (`/register`), Giriş & Çıkış (`/login`, `/logout`, `/api/auth/login`, `/api/auth/logout`, `/api/auth/me`), `AuthController`, `AuthMiddleware` (RBAC & İş İlanı/Başvuru/Sahiplik Bekçisi), `views/errors/403.php`, `password_hash` Güvenliği ve `010_add_password_hash_to_users_table.sql`.

@@ -182,6 +182,52 @@ class ApiController
                         ]
                     ]
                 ],
+                '/api/auth/login' => [
+                    'post' => [
+                        'tags'        => ['Auth'],
+                        'summary'     => 'E-posta ve parola ile giriş yap (Login) - AuthController::apiLogin',
+                        'requestBody' => [
+                            'required' => true,
+                            'content'  => [
+                                'application/json' => [
+                                    'schema' => [
+                                        'type'       => 'object',
+                                        'required'   => ['email', 'password'],
+                                        'properties' => [
+                                            'email'    => ['type' => 'string', 'format' => 'email', 'example' => 'elif.kaya@alumni.iu.edu.tr'],
+                                            'password' => ['type' => 'string', 'example' => 'Alumni2026!']
+                                        ]
+                                    ]
+                                ]
+                            ]
+                        ],
+                        'responses' => [
+                            '200' => ['description' => 'Giriş başarılı, oturum başlatıldı ve kullanıcı bilgileri döner'],
+                            '401' => ['description' => 'Geçersiz e-posta veya parola'],
+                            '403' => ['description' => 'Hesap askıya alınmış (suspended) veya onay bekliyor (pending)'],
+                            '422' => ['description' => 'Eksik kimlik bilgisi']
+                        ]
+                    ]
+                ],
+                '/api/auth/logout' => [
+                    'post' => [
+                        'tags'      => ['Auth'],
+                        'summary'   => 'Aktif oturumu sonlandır (Logout) - AuthController::apiLogout',
+                        'responses' => [
+                            '200' => ['description' => 'Oturum başarıyla sonlandırıldı']
+                        ]
+                    ]
+                ],
+                '/api/auth/me' => [
+                    'get' => [
+                        'tags'      => ['Auth'],
+                        'summary'   => 'Oturum açmış mevcut kullanıcının profil ve RBAC izinlerini getir - AuthController::apiMe',
+                        'responses' => [
+                            '200' => ['description' => 'Oturum bilgisi ve rol izinleri'],
+                            '401' => ['description' => 'Kimlik doğrulama gerekli (AuthMiddleware)']
+                        ]
+                    ]
+                ],
                 '/api/users' => [
                     'get' => [
                         'tags'      => ['ApiUserController'],
@@ -333,8 +379,10 @@ class ApiController
                             ]
                         ],
                         'responses'   => [
-                            '201' => ['description' => 'İlan başarıyla oluşturuldu'],
+                            '201' => ['description' => 'İlan başarıyla oluşturuldu (alumnus, faculty, admin)'],
                             '400' => ['description' => 'Geçersiz JSON veya gövde'],
+                            '401' => ['description' => 'Kimlik doğrulama gerekli (AuthMiddleware)'],
+                            '403' => ['description' => 'Yetkisiz rol — Öğrenciler (student) iş ilanı yayınlayamaz (AuthMiddleware)'],
                             '422' => ['description' => 'Doğrulama hatası (Validation Failed per ddd.md)']
                         ]
                     ]

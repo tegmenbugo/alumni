@@ -65,9 +65,10 @@
                 <span style="font-size: 1.6rem;">🎓</span>
                 <span style="color: var(--primary-navy); font-size: 1.1rem;">Alumni Tracking</span>
             </a>
-            <div class="ms-auto d-flex gap-2">
+            <div class="ms-auto d-flex gap-2 align-items-center flex-wrap">
                 <a href="/users" class="btn btn-outline-secondary btn-sm">← Mezunlar Listesi</a>
                 <a href="/users/<?= $user['id'] ?>/edit" class="btn btn-warning btn-sm fw-semibold">✏️ Düzenle</a>
+                <?php include __DIR__ . '/../partials/auth_nav.php'; ?>
             </div>
         </div>
     </nav>

@@ -126,13 +126,11 @@
                         <a class="nav-link fw-semibold text-dark" href="/about">ℹ️ Hakkında</a>
                     </li>
                 </ul>
-                <div class="d-flex gap-2">
-                    <a href="/jobs" class="btn btn-outline-primary btn-sm px-3 fw-semibold">
+                <div class="d-flex gap-2 align-items-center flex-wrap">
+                    <a href="/jobs" class="btn btn-outline-secondary btn-sm px-3 fw-semibold">
                         💼 İlanları Gör
                     </a>
-                    <a href="/register" class="btn btn-primary btn-sm px-3 fw-semibold">
-                        📝 Kayıt Ol
-                    </a>
+                    <?php include __DIR__ . '/partials/auth_nav.php'; ?>
                 </div>
             </div>
         </div>
@@ -312,6 +310,20 @@
                             <td><code>/register</code></td>
                             <td><code>AuthController::showRegister() / register()</code> (Kayıt & RBAC)</td>
                             <td class="text-end"><a href="/register" class="btn btn-xs btn-outline-primary py-0">Kayıt Ol</a></td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge bg-info text-dark">Hafta 09</span></td>
+                            <td><span class="badge bg-success">GET / POST</span></td>
+                            <td><code>/login</code> & <code>/logout</code></td>
+                            <td><code>AuthController::login() / logout()</code> (Oturum & RBAC)</td>
+                            <td class="text-end"><a href="/login" class="btn btn-xs btn-outline-primary py-0">Giriş Yap</a></td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge bg-info text-dark">Hafta 09</span></td>
+                            <td><span class="badge bg-primary">POST API</span></td>
+                            <td><code>/api/auth/login</code></td>
+                            <td><code>AuthController::apiLogin()</code> & <code>/api/auth/me</code></td>
+                            <td class="text-end"><a href="/api/swagger" class="btn btn-xs btn-outline-info py-0" target="_blank">Swagger</a></td>
                         </tr>
                         <tr>
                             <td><span class="badge bg-info text-dark">Hafta 09</span></td>

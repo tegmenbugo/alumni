@@ -58,7 +58,14 @@ $router->get('/404',              [ErrorController::class, 'notFound']); // Haft
 // -------------------------------------------------------------
 $router->get('/register',          [AuthController::class, 'showRegister']);
 $router->post('/register',         [AuthController::class, 'register']);
+$router->get('/login',             [AuthController::class, 'showLogin']);
+$router->post('/login',            [AuthController::class, 'login']);
+$router->get('/logout',            [AuthController::class, 'logout']);
+$router->post('/logout',           [AuthController::class, 'logout']);
 $router->post('/api/auth/register',[AuthController::class, 'apiRegister']);
+$router->post('/api/auth/login',   [AuthController::class, 'apiLogin']);
+$router->post('/api/auth/logout',  [AuthController::class, 'apiLogout']);
+$router->get('/api/auth/me',       [AuthController::class, 'apiMe']);
 
 // -------------------------------------------------------------
 // SİSTEM, DOKÜMANTASYON & MİGRASYON ROTALARI (Week 03 & Week 05)

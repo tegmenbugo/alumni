@@ -130,7 +130,8 @@ alumni/
 │   │   ├── Response.php                # JSON, Text ve Redirect HTTP yanıt üreticisi
 │   │   └── View.php                    # HTML şablon renderer
 │   │
-│   ├── Middlewares/                    # [ARA KATMANLAR & GÜVENLİK BEKÇİLERİ - Hafta 07]
+│   ├── Middlewares/                    # [ARA KATMANLAR & GÜVENLİK BEKÇİLERİ - Hafta 07 & 09]
+│   │   ├── AuthMiddleware.php          # [Hafta 09] RBAC Yetkilendirme, oturum, sahiplik ve iş ilanı/başvuru bekçisi (401/403)
 │   │   ├── LoggerMiddleware.php        # İstek süresi, metot ve HTTP kodunu terminale ve logs/'a basar
 │   │   ├── NotFoundGuardianMiddleware.php   # [404 Guardian] Gerekçeli 404 ve rota öneri motoru
 │   │   └── ServerErrorGuardianMiddleware.php # [5xx Guardian] 500 hatalarını yakalar, takip ID'si ve döküm sunar
@@ -156,9 +157,13 @@ alumni/
 │   ├── about.php                       # Proje hakkında sayfası
 │   ├── swagger.php                     # Swagger UI canlı dokümantasyon sayfası
 │   ├── auth/                           # [KİMLİK DOĞRULAMA - Hafta 09]
+│   │   ├── login.php                   # Oturum açma sayfası ve demo hesap hızlı doldurma kartları
 │   │   └── register.php                # Rol seçimli (Mezun/Öğrenci) yeni kullanıcı kayıt sayfası
-│   ├── errors/                         # [HATA ŞABLONLARI - Hafta 07 (Görev 7)]
+│   ├── errors/                         # [HATA ŞABLONLARI - Hafta 07 & 09]
+│   │   ├── 403.php                     # Yetkisiz erişim (403 Forbidden) RBAC bilgilendirme sayfası
 │   │   └── 404.php                     # Generic 404 sayfası ve otomatik geri sayımlı redirect
+│   ├── partials/                       # [ORTAK BİLEŞENLER]
+│   │   └── auth_nav.php                # Oturum durumuna göre Giriş/Kayıt veya Profil/Çıkış navbar bileşeni
 │   ├── users/                          # Mezun web arayüz şablonları (index, show, edit)
 │   └── jobs/                           # [Hafta 06 UI] İlan portalı ve detay/başvuru ekranları (index, show)
 │
@@ -356,7 +361,7 @@ Dersin ve modern yazılım mühendisliğinin temel ilkelerinden biri olan **Gör
 
 ---
 
-## 🔐 Hafta 09: Yetkilendirme (RBAC) ve Kayıt Sayfası (`/register`)
+## 🔐 Hafta 09: Yetkilendirme (RBAC), Kayıt, Giriş/Çıkış ve `AuthMiddleware`
 
 1. **Rol Tabanlı Yetkilendirme Matrisi ([ddd.md Bölüm 8](./ddd.md#-8-veri-bütünlüğü-güvenlik-ve-rol-tabanlı-yetkilendirme-auth--rbac)):**
    * 5 sistem rolü tanımlandı: `guest`, `student`, `alumnus`, `faculty`, `admin`.
@@ -366,6 +371,15 @@ Dersin ve modern yazılım mühendisliğinin temel ilkelerinden biri olan **Gör
    * **Rotalar:** `GET /register`, `POST /register`, `POST /api/auth/register`.
    * **Alanlar & Doğrulama:** Ad Soyad, Benzersiz E-posta, Rol seçimi (`Mezun` / `Öğrenci`), Bölüm, Mezuniyet Yılı (1950–2040), Şirket (opsiyonel), Bcrypt şifreli Parola (min 6 karakter, harf+rakam), Parola Tekrar ve Koşul Onayı.
    * **Veritabanı:** `010_add_password_hash_to_users_table.sql` ile `password_hash` sütunu tanımlandı (API ve Model çıktılarında asla sızdırılmaz).
+3. **Giriş & Çıkış İşlevselliği ([`views/auth/login.php`](./views/auth/login.php) & [`User::authenticate()`](./src/Models/User.php)):**
+   * **Web Rotaları:** `GET /login`, `POST /login`, `GET /logout`, `POST /logout`.
+   * **REST API Rotaları:** `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/auth/me`.
+   * **Güvenlik:** `password_verify()` (Bcrypt), `session_regenerate_id(true)` ile session fixation koruması, `suspended`/`pending` hesapların engellenmesi (`403`), çıkışta session ve çerez temizliği.
+4. **`AuthMiddleware` Tasarımı ([`src/Middlewares/AuthMiddleware.php`](./src/Middlewares/AuthMiddleware.php) & [`views/errors/403.php`](./views/errors/403.php)):**
+   * **Oturum Koruma (`requireAuth`):** Giriş yapılmamışsa Web isteklerini `/login?from=...` adresine yönlendirir, API isteklerine `401 Unauthorized` JSON döner.
+   * **İş İlanı Yayınlama Yetkisi (`requireCanPostJob`):** Yalnızca `alumnus`, `faculty` ve `admin` iş/staj ilanı açabilir. **`student` rolü ilan açmaya çalışırsa `403 Forbidden` ile engellenir.**
+   * **Başvuru & Çıkar Çatışması (`requireCanApplyJob`):** Yalnızca `student` ve `alumnus` ilanlara başvurabilir (`faculty`/`admin` başvuramaz); kullanıcı kendi açtığı ilana başvuramaz.
+   * **Kaynak Sahipliği (`requireCanManageJob` & `requireCanEditUser`):** İlan düzenleme/silme/başvuru görüntüleme yalnızca ilan sahibine veya `admin`'e; profil düzenleme yalnızca profil sahibine veya `admin`'e açıktır. Kullanıcı oluşturma/silme (`/users` `POST`, `DELETE`) ise yalnızca `admin` yetkisindedir.
 
 ---
 
@@ -379,7 +393,7 @@ Dersin ve modern yazılım mühendisliğinin temel ilkelerinden biri olan **Gör
 * [x] **Week 06:** Database integration & multi-table relationships — Updated `job_postings` table in `ddd.md`, created `008_update_job_postings_table.sql` migration (pending/unmigrated), and implemented `JobPosting` & `JobApplication` relational models with `User` relationships.
 * [x] **Week 07:** Business Rules, Validation Contract, Logger Middleware, 404 & 5xx Guardians, Persistent File Logging (`logs/error.logs`), Generic 404 Page & Invalid Request Redirect.
 * [x] **Week 08:** Feature Branching Workflow (`git checkout -b feature/homepage-design` & return to `main`), Modern Alumni Portal Homepage, Brand Identity Guidelines ([brand.md](./brand.md)) & Design System Specification ([DESIGN.md](./DESIGN.md) via VoltAgent standard).
-* [x] **Week 09:** Authorization & Registration — RBAC Roles & Feature Access Matrix in `ddd.md` Section 8, Bcrypt `password_hash` security, `AuthController`, `views/auth/register.php` (`/register` & `/api/auth/register`), and privilege escalation protection.
+* [x] **Week 09:** Authorization, Registration, Login/Logout & AuthMiddleware — RBAC Roles & Feature Access Matrix in `ddd.md` Section 8, Bcrypt `password_hash` security, `AuthController` (`/register`, `/login`, `/logout`, `/api/auth/*`), `AuthMiddleware` (session guard, role policies, job posting/application rules, ownership checks), `views/errors/403.php`, `views/auth/login.php` & `register.php`.
 * [ ] **Week 10:** Views & front-end integration.
 * [ ] **Week 11:** Authentication & authorization.
 * [ ] **Week 12:** Service layers.

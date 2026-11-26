@@ -44,8 +44,9 @@
                 <span style="font-size: 1.6rem;">🎓</span>
                 <span style="color: var(--primary-navy); font-size: 1.1rem;">Alumni Tracking</span>
             </a>
-            <div class="ms-auto d-flex gap-2">
+            <div class="ms-auto d-flex gap-2 align-items-center flex-wrap">
                 <a href="/jobs" class="btn btn-outline-secondary btn-sm">← Tüm İlanlar</a>
+                <?php include __DIR__ . '/../partials/auth_nav.php'; ?>
             </div>
         </div>
     </nav>
@@ -168,17 +169,39 @@
                         Bu ilana mezun profilinizle tek tıkla başvurabilirsiniz.
                     </p>
 
-                    <form action="/jobs/<?= $job['id'] ?>/apply" method="POST" class="d-flex flex-column gap-3">
-                        <div>
-                            <label class="form-label fw-semibold small">Başvuran Mezun / Öğrenci *</label>
-                            <select name="applicant_user_id" class="form-select" required>
-                                <?php foreach ($users as $u): ?>
-                                    <option value="<?= $u['id'] ?>">
-                                        <?= htmlspecialchars($u['name']) ?> (<?= htmlspecialchars($u['company'] ?? 'Mezun') ?>)
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
+                    <?php
+                        $showAuthUser = \App\Middlewares\AuthMiddleware::user();
+                        $canApply = $showAuthUser ? \App\Middlewares\AuthMiddleware::canApplyJob($job, $showAuthUser) : false;
+                        $isOwnJob = $showAuthUser && ((int)($job['posted_by_user_id'] ?? 0) === (int)$showAuthUser['id']);
+                    ?>
+
+                    <?php if (!$showAuthUser): ?>
+                        <div class="alert alert-info small mb-3">
+                            🔑 İlana başvurmak için hesabınızla giriş yapmalısınız.
                         </div>
+                        <a href="/login?from=/jobs/<?= (int)$job['id'] ?>" class="btn btn-primary w-100 fw-semibold py-2 mb-2">
+                            🔑 Giriş Yap ve Başvur
+                        </a>
+                        <a href="/register" class="btn btn-outline-primary w-100 btn-sm fw-semibold">
+                            📝 Hesabınız Yoksa Kayıt Olun
+                        </a>
+                    <?php else: ?>
+                        <?php if ($isOwnJob): ?>
+                            <div class="alert alert-warning small mb-3">
+                                ⚠️ Kendi yayınladığınız ilana başvuru yapamazsınız (Conflict of Interest).
+                            </div>
+                        <?php elseif (!$canApply): ?>
+                            <div class="alert alert-danger small mb-3">
+                                🚫 <strong><?= htmlspecialchars($showAuthUser['role']) ?></strong> rolü ilanlara başvuramaz. Başvurular yalnızca öğrenci ve mezunlara açıktır.
+                            </div>
+                        <?php endif; ?>
+
+                        <form action="/jobs/<?= $job['id'] ?>/apply" method="POST" class="d-flex flex-column gap-3">
+                            <div>
+                                <label class="form-label fw-semibold small">Başvuran Hesap (Oturum)</label>
+                                <input type="text" class="form-control bg-light" readonly
+                                       value="<?= htmlspecialchars($showAuthUser['name'] . ' (' . $showAuthUser['role'] . ')') ?>">
+                            </div>
                         <div>
                             <label class="form-label fw-semibold small">Ön Yazı / Motivasyon</label>
                             <textarea name="cover_letter" class="form-control" rows="3" placeholder="Neden bu rol için uygunsunuz?..."></textarea>
@@ -195,6 +218,7 @@
                             📥 Başvurumu Gönder (POST /apply)
                         </button>
                     </form>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>

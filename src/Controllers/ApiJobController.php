@@ -5,6 +5,7 @@ use App\Models\JobPosting;
 use App\Models\JobApplication;
 use App\Models\User;
 use App\Core\Response;
+use App\Middlewares\AuthMiddleware;
 
 /**
  * ApiJobController (REST API Controller)
@@ -43,10 +44,13 @@ class ApiJobController
 
     /**
      * POST /api/jobs - Yeni iş ilanı oluştur
-     * ddd.md Hafta 07 İş Kuralları ve Doğrulama Denetimi
+     * ddd.md Hafta 07 İş Kuralları + Hafta 09 AuthMiddleware (Sadece alumnus, faculty, admin)
      */
     public function store(): void
     {
+        // Hafta 09 (Görev 4): AuthMiddleware - Yalnızca alumnus, faculty, admin ilan yayınlayabilir
+        $authUser = AuthMiddleware::requireCanPostJob(true);
+
         $raw = file_get_contents('php://input');
         if (trim($raw) === '') {
             Response::json([
@@ -68,16 +72,14 @@ class ApiJobController
         // Hafta 07: ddd.md Doğrulama Kuralları
         $errors = JobPosting::validate($data);
 
-        // Kullanıcı kontrolü (Foreign Key bütünlüğü)
-        if (!empty($data['posted_by_user_id'])) {
-            $user = User::find((int)$data['posted_by_user_id']);
-            if (!$user) {
+        // Admin değilse ilan sahibi daima oturum açmış kullanıcıdır; admin başkası adına açabilir
+        if ($authUser['role'] === 'admin' && !empty($data['posted_by_user_id'])) {
+            $targetUser = User::find((int)$data['posted_by_user_id']);
+            if (!$targetUser) {
                 $errors['posted_by_user_id'] = 'Belirtilen kullanıcı (posted_by_user_id: ' . (int)$data['posted_by_user_id'] . ') sistemde mevcut değil.';
             }
         } else {
-            // Belirtilmediyse sistemdeki ilk aktif kullanıcıyı ata
-            $users = User::all();
-            $data['posted_by_user_id'] = !empty($users) ? $users[0]['id'] : 1;
+            $data['posted_by_user_id'] = (int)$authUser['id'];
         }
 
         if (!empty($errors)) {
@@ -140,6 +142,9 @@ class ApiJobController
             return;
         }
 
+        // Hafta 09 (Görev 4): AuthMiddleware - Yalnızca ilanın sahibi veya admin güncelleyebilir
+        AuthMiddleware::requireCanManageJob($existing, true);
+
         $raw = file_get_contents('php://input');
         if (trim($raw) === '') {
             Response::json([
@@ -181,12 +186,17 @@ class ApiJobController
      */
     public function destroy(string $id): void
     {
-        $deleted = JobPosting::delete((int)$id);
-        if (!$deleted) {
+        $jobId = (int)$id;
+        $existing = JobPosting::find($jobId);
+        if (!$existing) {
             Response::json(['error' => 'İş ilanı bulunamadı (ID: ' . $id . ')'], 404);
             return;
         }
 
+        // Hafta 09 (Görev 4): AuthMiddleware - Yalnızca ilanın sahibi veya admin silebilir
+        AuthMiddleware::requireCanManageJob($existing, true);
+
+        $deleted = JobPosting::delete($jobId);
         Response::json(['message' => 'İş ilanı başarıyla silindi', 'job' => $deleted], 200);
     }
 
@@ -222,7 +232,17 @@ class ApiJobController
      */
     public function userStoreJob(string $userId): void
     {
+        $authUser = AuthMiddleware::requireCanPostJob(true);
+
         $uId = (int)$userId;
+        if ($authUser['role'] !== 'admin' && (int)$authUser['id'] !== $uId) {
+            AuthMiddleware::denyForbidden(
+                '🚫 Başka bir kullanıcı adına iş ilanı açamazsınız. Yalnızca kendi adınıza veya admin yetkisiyle ilan açabilirsiniz.',
+                ['owner', 'admin'],
+                true
+            );
+        }
+
         $user = User::find($uId);
 
         if (!$user) {
@@ -233,8 +253,13 @@ class ApiJobController
         $data = $this->getJsonInput();
         $data['posted_by_user_id'] = $uId;
 
-        if (empty($data['title']) || empty($data['company_name'])) {
-            Response::json(['error' => 'title ve company_name alanları zorunludur.'], 400);
+        $errors = JobPosting::validate($data);
+        if (!empty($errors)) {
+            Response::json([
+                'error'   => 'Doğrulama hatası (Validation Failed)',
+                'message' => 'Gönderilen ilan verileri kurallara uymuyor.',
+                'errors'  => $errors
+            ], 422);
             return;
         }
 
@@ -244,7 +269,7 @@ class ApiJobController
 
     /**
      * NESTED: GET /api/jobs/{jobId}/applications
-     * Belirli bir ilana yapılan tüm başvuruları listeler.
+     * Belirli bir ilana yapılan tüm başvuruları listeler (Sadece ilan sahibi veya admin).
      */
     public function jobApplications(string $jobId): void
     {
@@ -256,6 +281,8 @@ class ApiJobController
             return;
         }
 
+        AuthMiddleware::requireCanManageJob($job, true);
+
         $applications = JobApplication::forPosting($jId);
         Response::json([
             'job'          => ['id' => $job['id'], 'title' => $job['title'], 'company' => $job['company_name']],
@@ -266,7 +293,7 @@ class ApiJobController
 
     /**
      * NESTED: POST /api/jobs/{jobId}/applications
-     * Belirli bir ilana yeni başvuru yapar.
+     * Belirli bir ilana yeni başvuru yapar (Sadece student/alumnus; kendi ilanına başvuramaz).
      */
     public function applyJob(string $jobId): void
     {
@@ -278,13 +305,11 @@ class ApiJobController
             return;
         }
 
+        $authUser = AuthMiddleware::requireCanApplyJob($job, true);
+
         $data = $this->getJsonInput();
         $data['job_posting_id'] = $jId;
-
-        if (empty($data['applicant_user_id'])) {
-            Response::json(['error' => 'applicant_user_id alanı zorunludur.'], 400);
-            return;
-        }
+        $data['applicant_user_id'] = (int)$authUser['id'];
 
         $app = JobApplication::create($data);
         Response::json([
@@ -295,11 +320,13 @@ class ApiJobController
 
     /**
      * NESTED: GET /api/users/{userId}/applications
-     * Belirli bir mezun/öğrencinin yaptığı tüm başvuruları listeler.
+     * Belirli bir mezun/öğrencinin yaptığı tüm başvuruları listeler (Sadece kendisi veya admin).
      */
     public function userApplications(string $userId): void
     {
         $uId = (int)$userId;
+        AuthMiddleware::requireCanEditUser($uId, true);
+
         $user = User::find($uId);
 
         if (!$user) {

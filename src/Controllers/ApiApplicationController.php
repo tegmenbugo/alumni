@@ -2,7 +2,9 @@
 namespace App\Controllers;
 
 use App\Models\JobApplication;
+use App\Models\JobPosting;
 use App\Core\Response;
+use App\Middlewares\AuthMiddleware;
 
 /**
  * ApiApplicationController (REST API Controller)
@@ -52,6 +54,20 @@ class ApiApplicationController
      */
     public function updateStatus(string $id): void
     {
+        $app = JobApplication::find((int)$id);
+        if (!$app) {
+            Response::json(['error' => 'Başvuru bulunamadı (ID: ' . $id . ')'], 404);
+            return;
+        }
+
+        // Hafta 09 (Görev 4): Başvuru durumunu yalnızca ilgili ilanın sahibi veya admin güncelleyebilir
+        $job = JobPosting::find((int)($app['job_posting_id'] ?? 0));
+        if ($job) {
+            AuthMiddleware::requireCanManageJob($job, true);
+        } else {
+            AuthMiddleware::requireRole(['admin'], true);
+        }
+
         $data = $this->getJsonInput();
         $status = $data['status'] ?? null;
 
@@ -61,11 +77,6 @@ class ApiApplicationController
         }
 
         $updated = JobApplication::updateStatus((int)$id, $status);
-        if (!$updated) {
-            Response::json(['error' => 'Başvuru bulunamadı (ID: ' . $id . ')'], 404);
-            return;
-        }
-
         Response::json([
             'message'     => 'Başvuru durumu güncellendi',
             'application' => $updated
@@ -77,12 +88,16 @@ class ApiApplicationController
      */
     public function destroy(string $id): void
     {
-        $deleted = JobApplication::delete((int)$id);
-
-        if (!$deleted) {
+        $app = JobApplication::find((int)$id);
+        if (!$app) {
             Response::json(['error' => 'Başvuru bulunamadı (ID: ' . $id . ')'], 404);
             return;
         }
+
+        // Hafta 09 (Görev 4): Yalnızca başvuruyu yapan aday veya admin silebilir
+        AuthMiddleware::requireCanEditUser((int)($app['applicant_user_id'] ?? 0), true);
+
+        $deleted = JobApplication::delete((int)$id);
 
         Response::json([
             'message'     => 'Başvuru başarıyla silindi',

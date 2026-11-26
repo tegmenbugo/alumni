@@ -4,6 +4,7 @@ namespace App\Controllers;
 use App\Models\User;
 use App\Core\View;
 use App\Core\Response;
+use App\Middlewares\AuthMiddleware;
 
 /**
  * UserController (MVC - Web Controller Katmanı)
@@ -47,6 +48,9 @@ class UserController
      */
     public function show(string $id): void
     {
+        // Hafta 09 (Görev 4): Detay profil görüntülemek için oturum açmış olma şartı (ddd.md Bölüm 8.3)
+        AuthMiddleware::requireAuth(false);
+
         $user = User::find((int)$id);
 
         if (!$user) {
@@ -62,10 +66,13 @@ class UserController
     // EDIT FORM — GET /users/{id}/edit
     // -------------------------------------------------------------------------
     /**
-     * Mezun düzenleme formu (View Layer — boş form, mevcut verilerle dolu)
+     * Mezun düzenleme formu (View Layer — yalnızca kendi profili veya admin)
      */
     public function edit(string $id): void
     {
+        // Hafta 09 (Görev 4): Sahiplik kontrolü (auth.id === target.id veya admin)
+        AuthMiddleware::requireCanEditUser((int)$id, false);
+
         $user = User::find((int)$id);
 
         if (!$user) {
@@ -81,10 +88,13 @@ class UserController
     // CREATE — POST /users
     // -------------------------------------------------------------------------
     /**
-     * Formdan yeni mezun kaydı; kayıt sonrası güncel liste View'i döndürür
+     * Formdan yeni mezun kaydı; kayıt sonrası güncel liste View'i döndürür (Sadece Admin)
      */
     public function store(): void
     {
+        // Hafta 09 (Görev 4): Doğrudan kullanıcı ekleme yalnızca admin yetkisindedir (normal kullanıcılar /register kullanır)
+        AuthMiddleware::requireRole(['admin'], false);
+
         $name    = trim($_POST['name'] ?? '');
         $email   = trim($_POST['email'] ?? '');
         $year    = !empty($_POST['graduationYear']) ? (int)$_POST['graduationYear'] : null;
@@ -121,6 +131,9 @@ class UserController
     public function update(string $id): void
     {
         $userId  = (int)$id;
+        // Hafta 09 (Görev 4): Sahiplik kontrolü (auth.id === target.id veya admin)
+        AuthMiddleware::requireCanEditUser($userId, false);
+
         $name    = trim($_POST['name'] ?? '');
         $email   = trim($_POST['email'] ?? '');
         $year    = !empty($_POST['graduationYear']) ? (int)$_POST['graduationYear'] : null;
@@ -160,6 +173,9 @@ class UserController
      */
     public function destroy(string $id): void
     {
+        // Hafta 09 (Görev 4): Kullanıcı silme yalnızca admin yetkisindedir (ddd.md Bölüm 8.3)
+        AuthMiddleware::requireRole(['admin'], false);
+
         $userId = (int)$id;
         $user   = User::find($userId);
         $name   = $user ? $user['name'] : "ID #{$userId}";

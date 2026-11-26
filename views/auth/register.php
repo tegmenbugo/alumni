@@ -93,8 +93,8 @@
                     <li class="nav-item"><a class="nav-link" href="/api/swagger" target="_blank">📚 Swagger UI</a></li>
                     <li class="nav-item"><a class="nav-link" href="/about">ℹ️ Hakkında</a></li>
                 </ul>
-                <div class="d-flex gap-2">
-                    <a href="/register" class="btn btn-primary btn-sm px-3 fw-semibold">📝 Kayıt Ol</a>
+                <div class="d-flex gap-2 align-items-center">
+                    <?php include __DIR__ . '/../partials/auth_nav.php'; ?>
                 </div>
             </div>
         </div>
