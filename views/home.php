@@ -286,6 +286,13 @@
                         </tr>
                         <tr>
                             <td><span class="badge bg-info text-dark">Hafta 09</span></td>
+                            <td><span class="badge bg-success">GET</span></td>
+                            <td><code>/dashboard</code></td>
+                            <td><code>DashboardController::index()</code> (Kişisel Panel, <code>/my-jobs</code>, <code>/my-applications</code>)</td>
+                            <td class="text-end"><a href="/dashboard" class="btn btn-xs btn-outline-primary py-0">Panelim</a></td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge bg-info text-dark">Hafta 09</span></td>
                             <td><span class="badge bg-success">GET / POST</span></td>
                             <td><code>/login</code> & <code>/logout</code></td>
                             <td><code>AuthController::login() / logout()</code> (Oturum & RBAC)</td>

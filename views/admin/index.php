@@ -322,7 +322,7 @@
                                             <div class="fw-bold"><?= htmlspecialchars($app['applicant_name'] ?? ('Aday #' . $app['applicant_user_id'])) ?></div>
                                             <div class="small text-muted">
                                                 İlan: <a href="/jobs/<?= (int)$app['job_posting_id'] ?>" class="text-decoration-none"><?= htmlspecialchars($app['job_title'] ?? ('#' . $app['job_posting_id'])) ?></a>
-                                                (<?= htmlspecialchars($app['company_name'] ?? '') ?>)
+                                                (<?= htmlspecialchars($app['job_company'] ?? $app['company_name'] ?? '') ?>)
                                             </div>
                                         </td>
                                         <td class="small text-muted"><?= htmlspecialchars($app['applied_at'] ?? '—') ?></td>

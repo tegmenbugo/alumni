@@ -6,6 +6,7 @@
 > 
 > ⚓ **Sözleşme Çapaları (Document Anchors):**  
 > * [🗄️ Veri Mimarisi (ddd.md)](./ddd.md)  
+> * [🔐 Kimlik Doğrulama & Yetkilendirme (Auth & RBAC)](#auth-section)  
 > * [🎨 Marka Rehberi (brand.md)](./brand.md) ([Sayfa İçi Çapa ➔](#brand-md))  
 > * [📐 AI Tasarım Sistemi (DESIGN.md)](./DESIGN.md) ([Sayfa İçi Çapa ➔](#design-md))  
 > * [📚 Canlı Swagger UI](/api/swagger)
@@ -151,6 +152,7 @@ alumni/
 │       ├── HomeController.php          # Web sayfaları (/, /hello, /sum, /about, /Alumni)
 │       ├── AuthController.php          # [Kimlik & Kayıt - Hafta 09] Kayıt, Giriş ve Çıkış (/register, /login, /logout, /api/auth/*)
 │       ├── AdminController.php         # [Admin Paneli - Hafta 09] Yönetici kontrol merkezi ve veri manipülasyonu (/admin)
+│       ├── DashboardController.php     # [Kişisel Sayfalar - Hafta 09] Panelim (/dashboard), İlanlarım (/my-jobs), Başvurularım (/my-applications)
 │       ├── ErrorController.php         # [Hata Yöneticisi - Hafta 07] Generic 404 ekranı ve yönlendirme (/404)
 │       └── ApiController.php           # Sistem sağlığı (/api/health), Migrasyonlar (/api/migrations), /api/test-500 ve Swagger
 │
@@ -160,6 +162,10 @@ alumni/
 │   ├── swagger.php                     # Swagger UI canlı dokümantasyon sayfası
 │   ├── admin/                          # [YÖNETİCİ PANELİ - Hafta 09]
 │   │   └── index.php                   # Kullanıcı rol/statü, ilan moderasyonu, başvuru ve log yönetimi (/admin)
+│   ├── dashboard/                      # [KULLANICIYA ÖZEL SAYFALAR - Hafta 09]
+│   │   ├── index.php                   # Rol odaklı kişisel çalışma alanı (/dashboard)
+│   │   ├── applications.php            # Başvurularım & geri çekme sayfası (/my-applications)
+│   │   └── my_jobs.php                 # İlanlarım & aday değerlendirme sayfası (/my-jobs)
 │   ├── auth/                           # [KİMLİK DOĞRULAMA - Hafta 09]
 │   │   ├── login.php                   # Oturum açma sayfası ve demo hesap hızlı doldurma kartları
 │   │   └── register.php                # Rol seçimli (Mezun/Öğrenci) yeni kullanıcı kayıt sayfası
@@ -366,30 +372,63 @@ Dersin ve modern yazılım mühendisliğinin temel ilkelerinden biri olan **Gör
 
 ---
 
-## 🔐 Hafta 09: Yetkilendirme (RBAC), Kayıt, Giriş/Çıkış ve `AuthMiddleware`
+<a id="auth-section"></a>
+## 🔐 Kimlik Doğrulama ve Rol Tabanlı Yetkilendirme (Authentication & RBAC — Hafta 09)
 
-1. **Rol Tabanlı Yetkilendirme Matrisi ([ddd.md Bölüm 8](./ddd.md#-8-veri-bütünlüğü-güvenlik-ve-rol-tabanlı-yetkilendirme-auth--rbac)):**
-   * 5 sistem rolü tanımlandı: `guest`, `student`, `alumnus`, `faculty`, `admin`.
-   * Her rolün erişebileceği web sayfaları ve REST API rotaları (ilan açma, başvuru yapma, profil düzenleme, yönetim) ile sahiplik (ownership) kuralları sözleşmeye bağlandı.
-   * **Ayrıcalık Yükseltme Engeli:** Kayıt formundan (`POST /register`, `POST /api/auth/register`) `admin` veya `faculty` rolü seçilemez (`403 Forbidden`).
-2. **Kayıt Ol Sayfası ve İşlevselliği ([`views/auth/register.php`](./views/auth/register.php) & [`AuthController.php`](./src/Controllers/AuthController.php)):**
-   * **Rotalar:** `GET /register`, `POST /register`, `POST /api/auth/register`.
-   * **Alanlar & Doğrulama:** Ad Soyad, Benzersiz E-posta, Rol seçimi (`Mezun` / `Öğrenci`), Bölüm, Mezuniyet Yılı (1950–2040), Şirket (opsiyonel), Bcrypt şifreli Parola (min 6 karakter, harf+rakam), Parola Tekrar ve Koşul Onayı.
-   * **Veritabanı:** `010_add_password_hash_to_users_table.sql` ile `password_hash` sütunu tanımlandı (API ve Model çıktılarında asla sızdırılmaz).
-3. **Giriş & Çıkış İşlevselliği ([`views/auth/login.php`](./views/auth/login.php) & [`User::authenticate()`](./src/Models/User.php)):**
-   * **Web Rotaları:** `GET /login`, `POST /login`, `GET /logout`, `POST /logout`.
-   * **REST API Rotaları:** `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/auth/me`.
-   * **Güvenlik:** `password_verify()` (Bcrypt), `session_regenerate_id(true)` ile session fixation koruması, `suspended`/`pending` hesapların engellenmesi (`403`), çıkışta session ve çerez temizliği.
-4. **`AuthMiddleware` Tasarımı ([`src/Middlewares/AuthMiddleware.php`](./src/Middlewares/AuthMiddleware.php) & [`views/errors/403.php`](./views/errors/403.php)):**
-   * **Oturum Koruma (`requireAuth`):** Giriş yapılmamışsa Web isteklerini `/login?from=...` adresine yönlendirir, API isteklerine `401 Unauthorized` JSON döner.
-   * **İş İlanı Yayınlama Yetkisi (`requireCanPostJob`):** Yalnızca `alumnus`, `faculty` ve `admin` iş/staj ilanı açabilir. **`student` rolü ilan açmaya çalışırsa `403 Forbidden` ile engellenir.**
-   * **Başvuru & Çıkar Çatışması (`requireCanApplyJob`):** Yalnızca `student` ve `alumnus` ilanlara başvurabilir (`faculty`/`admin` başvuramaz); kullanıcı kendi açtığı ilana başvuramaz.
-   * **Kaynak Sahipliği (`requireCanManageJob` & `requireCanEditUser`):** İlan düzenleme/silme/başvuru görüntüleme yalnızca ilan sahibine veya `admin`'e; profil düzenleme yalnızca profil sahibine veya `admin`'e açıktır. Kullanıcı oluşturma/silme (`/users` `POST`, `DELETE`) ise yalnızca `admin` yetkisindedir.
-5. **Admin Paneli ve Yönetici Ataması ([`AdminController.php`](./src/Controllers/AdminController.php) & [`views/admin/index.php`](./views/admin/index.php)):**
-   * **`011_assign_admin_role_to_owner.sql`:** Proje sahibi Battal Buğra Karataş (`bugrakaratas@alumni.iu.edu.tr`) hesabına `admin` rolü atandı.
-   * **`/admin` Kontrol Merkezi:** Yalnızca `admin` rolünün erişebildiği panelde kullanıcı rolleri (`student`/`alumnus`/`faculty`/`admin`) ve durumları (`active`/`pending`/`suspended`) değiştirilebilir, yeni rol atanmış kullanıcı oluşturulabilir, ilanlar ve başvurular modere edilebilir, `logs/error.logs` incelenebilir.
-6. **Rol Tabanlı Dinamik Navigasyon ([`AuthMiddleware::getNavigationMenu()`](./src/Middlewares/AuthMiddleware.php) & [`views/partials/navbar.php`](./views/partials/navbar.php)):**
-   * Üst menü öğeleri oturum açmış kullanıcının rolüne göre dinamik olarak oluşturulur: `guest` yalnızca genel sayfaları ve Giriş/Kayıt butonlarını görür; `student` Profilim'i görür ancak **İlan Yayınla** ve **Admin Paneli** gizlenir; `alumnus`/`faculty` **İlan Yayınla** ve **Swagger API** görür; **`admin`** ise bunlara ek olarak **🛡️ Admin Paneli (`/admin`)** ve **⚙️ Migrasyonlar** menülerine erişir.
+Sistem, **Bcrypt parola özetleme (`password_hash`)**, **PHP Session yönetimi**, **Rol Tabanlı Erişim Kontrolü (`AuthMiddleware`)**, **Yönetici Kontrol Paneli (`/admin`)**, **Rol Tabanlı Dinamik Navigasyon** ve **Kullanıcıya Özel Çalışma Alanları** ile uçtan uca yetkilendirme güvenliği sunar. Tüm iş kuralları ve izin matrisi **[ddd.md Bölüm 8](./ddd.md#-8-veri-bütünlüğü-güvenlik-ve-rol-tabanlı-yetkilendirme-auth--rbac)** ile birebir senkronizedir.
+
+### 1. Sistem Rolleri ve Erişim Politikaları
+| Rol | Tanım | İlan Açma (`POST /jobs`) | İlana Başvuru | Kullanıcıya Özel Sayfalar | Admin Paneli (`/admin`) |
+| :--- | :--- | :---: | :---: | :--- | :---: |
+| **`guest`** | Oturum açmamış ziyaretçi | ❌ `401` | ❌ `401` | ❌ `401` (`/login` yönlendirmesi) | ❌ `401` |
+| **`student`** | Aktif İÜ Öğrencisi | ❌ `403 Forbidden` | ✅ | `/dashboard`, `/my-applications`, `/users/{id}` | ❌ `403` |
+| **`alumnus`** | İstanbul Üniversitesi Mezunu | ✅ | ✅ *(Kendi ilanı hariç)* | `/dashboard`, `/my-jobs`, `/my-applications`, `/users/{id}` | ❌ `403` |
+| **`faculty`** | Öğretim Üyesi / Akademisyen | ✅ | ❌ `403` | `/dashboard`, `/my-jobs`, `/users/{id}` | ❌ `403` |
+| **`admin`** | Sistem Yöneticisi | ✅ | ❌ `403` | `/dashboard`, `/my-jobs`, Tüm profiller | ✅ Tam Yetki |
+
+### 2. Kimlik Doğrulama Akışı & Güvenlik Kuralları
+* **Kayıt Olma (`GET/POST /register`, `POST /api/auth/register`):**
+  * Kayıt formunda yalnızca **`alumnus`** veya **`student`** seçilebilir; dışarıdan manipülasyonla `admin` veya `faculty` rolü gönderilmesi **`403 Forbidden`** *(Anti-Privilege Escalation)* ile engellenir.
+  * Parolalar en az 6 karakter (en az 1 harf ve 1 rakam) olarak doğrulanır ve `PASSWORD_BCRYPT` ile özetlenerek `users.password_hash` sütununda (`010_add_password_hash_to_users_table.sql`) saklanır. `User::all()`, `User::find()` ve API çıktıları `password_hash` alanını **asla** dışarı sızdırmaz.
+* **Giriş & Çıkış (`GET/POST /login`, `GET/POST /logout`, `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/auth/me`):**
+  * `User::authenticate()` ile e-posta + Bcrypt parola doğrulaması yapılır, başarılı girişte `session_regenerate_id(true)` ile session fixation engellenir ve `$_SESSION['user']` başlatılır.
+  * `status` değeri **`suspended`** veya **`pending`** olan hesapların girişi `403 Forbidden` ile durdurulur.
+
+### 3. `AuthMiddleware` Koruma Katmanı ([`src/Middlewares/AuthMiddleware.php`](./src/Middlewares/AuthMiddleware.php))
+| Guard Metodu | Koruduğu Rotalar / Kurallar | Yetkisiz Durumda Yanıt |
+| :--- | :--- | :--- |
+| **`requireAuth()`** | Profil detayı, kişisel panel, API yazma işlemleri | Web: `/login?from=...` · API: `401 Unauthorized` |
+| **`requireCanPostJob()`** | `POST /jobs`, `POST /api/jobs`, `GET /my-jobs` (`alumnus`, `faculty`, `admin`) | `student` için **`403 Forbidden`** ([`views/errors/403.php`](./views/errors/403.php)) |
+| **`requireCanApplyJob()`** | `POST /jobs/{id}/apply`, `POST /api/jobs/{id}/applications` (`student`, `alumnus`) | `faculty`/`admin` veya **kendi ilanına başvuru** için `403` |
+| **`requireCanManageJob()`** | `PUT/DELETE /api/jobs/{id}`, `/my-jobs/*`, `GET /api/jobs/{id}/applications` | Yalnızca ilan sahibi veya `admin`; aksi halde `403` |
+| **`requireCanEditUser()`** | `GET/POST /users/{id}/edit`, `GET /api/users/{id}/applications` | Sahiplik: `auth.id === target.id` veya `admin`; aksi halde `403` |
+| **`requireRole(['admin'])`** | `/admin` ve tüm `/admin/*` rotaları, `/users` `store` / `destroy` | `admin` dışı tüm roller için **`403 Forbidden`** |
+
+### 4. Yönetici Paneli (`/admin`) & Kullanıcıya Özel Sayfalar
+* **Admin Paneli ([`AdminController.php`](./src/Controllers/AdminController.php) & [`views/admin/index.php`](./views/admin/index.php)):**
+  * [`011_assign_admin_role_to_owner.sql`](./database/migrations/011_assign_admin_role_to_owner.sql) migrasyonu ile proje sahibi **Battal Buğra Karataş (`bugrakaratas@alumni.iu.edu.tr`)** hesabına `admin` rolü atanmıştır.
+  * `/admin` üzerinden kullanıcı rolleri ve durumları güncellenebilir, rol atamalı yeni kullanıcı oluşturulabilir, iş ilanları ve başvurular modere edilebilir ve `logs/error.logs` kayıtları incelenebilir.
+* **Kullanıcıya Özel Sayfalar ([`DashboardController.php`](./src/Controllers/DashboardController.php)):**
+  * **`GET /dashboard`:** Giriş yapan kullanıcının rolüne göre kişisel özetini, kendi başvurularını/ilanlarını ve güncel açık fırsatları listeler.
+  * **`GET /my-applications` & `POST /my-applications/{id}/withdraw`:** `student` ve `alumnus` kullanıcılarının kendi başvurularını takip edip geri çekebildiği sayfa.
+  * **`GET /my-jobs` & `POST /my-jobs/{id}/*`:** `alumnus`, `faculty` ve `admin` kullanıcılarının kendi açtıkları ilanların durumunu (`active`/`closed`/`draft`/`archived`) yönettiği ve gelen aday başvurularını (`reviewing`/`interview`/`accepted`/`rejected`) değerlendirdiği sayfa.
+
+### 5. Rol Tabanlı Dinamik Navigasyon ([`AuthMiddleware::getNavigationMenu()`](./src/Middlewares/AuthMiddleware.php) & [`views/partials/navbar.php`](./views/partials/navbar.php))
+Üst menü (`navbar.php`), aktif kullanıcının rolüne göre yalnızca erişebildiği bağlantıları gösterir:
+* **`guest`:** Ana Sayfa, Mezunlar, Kariyer & İlanlar, Hakkında + *Giriş Yap / Kayıt Ol*
+* **`student`:** Ana Sayfa, Mezunlar, Kariyer & İlanlar, **Panelim (`/dashboard`)**, **Başvurularım (`/my-applications`)**, **Profilim**, Hakkında + *Çıkış Yap*
+* **`alumnus`:** Yukarıdakilere ek olarak **İlanlarım (`/my-jobs`)**, **İlan Yayınla (`/jobs?new=1`)**, **Swagger API**
+* **`faculty`:** Ana Sayfa, Mezunlar, Kariyer & İlanlar, **Panelim**, **İlanlarım**, **İlan Yayınla**, **Profilim**, **Swagger API**, Hakkında
+* **`admin`:** Yukarıdakilere ek olarak **🛡️ Admin Paneli (`/admin`)** ve **⚙️ Migrasyonlar (`/api/migrations`)**
+
+### 6. Hızlı Test Hesapları (Demo Credentials)
+`/login` sayfasındaki tek tıkla doldurulabilir demo hesaplar (parola: **`Alumni2026!`**):
+| E-Posta | Rol | Yetki Kapsamı |
+| :--- | :---: | :--- |
+| `bugrakaratas@alumni.iu.edu.tr` | `admin` | Tam yetki, `/admin` paneli, rol/veri manipülasyonu |
+| `elif.kaya@alumni.iu.edu.tr` | `alumnus` | İlan açma (`/jobs?new=1`, `/my-jobs`) ve diğer ilanlara başvurma |
+| `ayse.yilmaz@alumni.iu.edu.tr` | `student` | İlanlara başvurma (`/my-applications`), ilan açmada `403 Forbidden` |
+| `dr.aydin@iu.edu.tr` | `faculty` | Akademik ilan açma (`/my-jobs`) ve aday yönetimi |
 
 ---
 
@@ -403,7 +442,7 @@ Dersin ve modern yazılım mühendisliğinin temel ilkelerinden biri olan **Gör
 * [x] **Week 06:** Database integration & multi-table relationships — Updated `job_postings` table in `ddd.md`, created `008_update_job_postings_table.sql` migration (pending/unmigrated), and implemented `JobPosting` & `JobApplication` relational models with `User` relationships.
 * [x] **Week 07:** Business Rules, Validation Contract, Logger Middleware, 404 & 5xx Guardians, Persistent File Logging (`logs/error.logs`), Generic 404 Page & Invalid Request Redirect.
 * [x] **Week 08:** Feature Branching Workflow (`git checkout -b feature/homepage-design` & return to `main`), Modern Alumni Portal Homepage, Brand Identity Guidelines ([brand.md](./brand.md)) & Design System Specification ([DESIGN.md](./DESIGN.md) via VoltAgent standard).
-* [x] **Week 09:** Authorization, Registration, Login/Logout, AuthMiddleware, Admin Panel & Dynamic Navigation — RBAC Roles & Matrix (`ddd.md` Sec 8), Bcrypt `password_hash`, `AuthController` (`/register`, `/login`, `/logout`, `/api/auth/*`), `AuthMiddleware` (session, RBAC, job/application & ownership guards), `AdminController` (`/admin` data manipulation & owner `admin` assignment), Dynamic Role-Based Navbar (`views/partials/navbar.php`), `views/errors/403.php`, and migrations `010`–`011`.
+* [x] **Week 09:** Authorization, Registration, Login/Logout, AuthMiddleware, Admin Panel, Dynamic Navigation, User-Specific Pages & Auth README — Complete RBAC (`ddd.md` Sec 8), Bcrypt `password_hash`, `AuthController` (`/register`, `/login`, `/logout`, `/api/auth/*`), `AuthMiddleware` (session, RBAC, job/application & ownership guards), `AdminController` (`/admin` + owner `admin` assignment), `DashboardController` (`/dashboard`, `/my-jobs`, `/my-applications`), Dynamic Role-Based Navbar (`views/partials/navbar.php`), `views/errors/403.php`, migrations `010`–`011`, and `#auth-section` in `README.md`.
 * [ ] **Week 10:** Views & front-end integration.
 * [ ] **Week 11:** Authentication & authorization.
 * [ ] **Week 12:** Service layers.

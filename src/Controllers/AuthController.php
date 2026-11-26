@@ -228,10 +228,10 @@ class AuthController
         // Oturum sabitleme saldırısına karşı Session ID yenile
         session_regenerate_id(true);
 
-        // 5. Yönlendirme: form'dan gelen redirect_to veya / ana sayfa
+        // 5. Yönlendirme: form'dan gelen redirect_to veya kullanıcıya özel /dashboard
         $redirectTo = trim($_POST['redirect_to'] ?? '');
         if ($redirectTo === '' || str_starts_with($redirectTo, '//') || str_starts_with($redirectTo, 'http')) {
-            $redirectTo = '/';
+            $redirectTo = '/dashboard';
         }
 
         header('Location: ' . $redirectTo);

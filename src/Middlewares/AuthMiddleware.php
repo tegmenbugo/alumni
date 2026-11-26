@@ -367,6 +367,33 @@ class AuthMiddleware
                 'badge'  => null,
             ],
             [
+                'id'     => 'dashboard',
+                'label'  => 'Panelim',
+                'icon'   => '📊',
+                'href'   => '/dashboard',
+                'roles'  => ['student', 'alumnus', 'faculty', 'admin'], // Sadece giriş yapanlar
+                'target' => '_self',
+                'badge'  => null,
+            ],
+            [
+                'id'     => 'my_applications',
+                'label'  => 'Başvurularım',
+                'icon'   => '📥',
+                'href'   => '/my-applications',
+                'roles'  => ['student', 'alumnus'], // Başvuru yapabilen roller
+                'target' => '_self',
+                'badge'  => null,
+            ],
+            [
+                'id'     => 'my_jobs',
+                'label'  => 'İlanlarım',
+                'icon'   => '📋',
+                'href'   => '/my-jobs',
+                'roles'  => ['alumnus', 'faculty', 'admin'], // İlan açabilen roller (öğrenci göremez)
+                'target' => '_self',
+                'badge'  => null,
+            ],
+            [
                 'id'     => 'post_job',
                 'label'  => 'İlan Yayınla',
                 'icon'   => '➕',

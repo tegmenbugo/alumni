@@ -34,6 +34,7 @@ use App\Controllers\ApiApplicationController;
 use App\Controllers\ErrorController;
 use App\Controllers\AuthController;
 use App\Controllers\AdminController;
+use App\Controllers\DashboardController;
 
 // 2. Global CORS Başlıkları
 header('Access-Control-Allow-Origin: *');
@@ -78,6 +79,16 @@ $router->post('/admin/users/{id}/delete',        [AdminController::class, 'delet
 $router->post('/admin/jobs/{id}/status',         [AdminController::class, 'updateJobStatus']);
 $router->post('/admin/jobs/{id}/delete',         [AdminController::class, 'deleteJob']);
 $router->post('/admin/applications/{id}/status', [AdminController::class, 'updateApplicationStatus']);
+
+// -------------------------------------------------------------
+// KULLANICIYA ÖZEL SAYFALAR (Hafta 09 - Görev 7: User-Specific Pages)
+// -------------------------------------------------------------
+$router->get('/dashboard',                                       [DashboardController::class, 'index']);
+$router->get('/my-applications',                                 [DashboardController::class, 'myApplications']);
+$router->post('/my-applications/{id}/withdraw',                  [DashboardController::class, 'withdrawApplication']);
+$router->get('/my-jobs',                                         [DashboardController::class, 'myJobs']);
+$router->post('/my-jobs/{jobId}/status',                         [DashboardController::class, 'updateMyJobStatus']);
+$router->post('/my-jobs/{jobId}/applications/{appId}/status',    [DashboardController::class, 'updateApplicantStatus']);
 
 // -------------------------------------------------------------
 // SİSTEM, DOKÜMANTASYON & MİGRASYON ROTALARI (Week 03 & Week 05)
