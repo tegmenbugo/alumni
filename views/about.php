@@ -32,20 +32,13 @@
 </head>
 <body>
 
-    <!-- Ortak Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-custom sticky-top mb-4">
-        <div class="container">
-            <a class="navbar-brand d-flex align-items-center gap-2 fw-bold text-dark" href="/">
-                <span style="font-size: 1.6rem;">🎓</span>
-                <span style="color: var(--primary-navy); font-size: 1.1rem;">Alumni Tracking</span>
-            </a>
-            <div class="ms-auto d-flex gap-2 align-items-center flex-wrap">
-                <a href="/" class="btn btn-outline-secondary btn-sm">🏠 Ana Sayfa</a>
-                <a href="/api/swagger" class="btn btn-outline-primary btn-sm" target="_blank">Swagger UI ↗</a>
-                <?php include __DIR__ . '/partials/auth_nav.php'; ?>
-            </div>
-        </div>
-    </nav>
+    <!-- Dinamik Rol Tabanlı Üst Navbar -->
+    <?php
+        $navbarId = 'aboutNav';
+        $extraActions = '';
+        include __DIR__ . '/partials/navbar.php';
+    ?>
+    <div class="mb-4"></div>
 
     <main class="container pb-5">
         <div class="row justify-content-center">

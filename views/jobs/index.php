@@ -52,33 +52,15 @@
 </head>
 <body>
 
-    <!-- Ortak Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-custom sticky-top">
-        <div class="container">
-            <a class="navbar-brand d-flex align-items-center gap-2 fw-bold text-dark" href="/">
-                <span style="font-size: 1.6rem;">🎓</span>
-                <span style="color: var(--primary-navy); font-size: 1.1rem;">Alumni Tracking</span>
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#jobsNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="jobsNav">
-                <ul class="navbar-nav me-auto ms-3">
-                    <li class="nav-item"><a class="nav-link" href="/">🏠 Ana Sayfa</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/users">👥 Mezunlar</a></li>
-                    <li class="nav-item"><a class="nav-link active fw-bold text-primary" href="/jobs">💼 Kariyer & İlanlar</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/api/swagger" target="_blank">📚 Swagger UI</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/about">ℹ️ Hakkında</a></li>
-                </ul>
-                <div class="d-flex gap-2 align-items-center flex-wrap">
-                    <button class="btn btn-primary btn-sm px-3 fw-semibold" data-bs-toggle="modal" data-bs-target="#newJobModal">
-                        + Yeni İlan Yayınla
-                    </button>
-                    <?php include __DIR__ . '/../partials/auth_nav.php'; ?>
-                </div>
-            </div>
-        </div>
-    </nav>
+    <!-- Dinamik Rol Tabanlı Üst Navbar -->
+    <?php
+        $navbarId = 'jobsNav';
+        $extraActions = '';
+        if (\App\Middlewares\AuthMiddleware::canPostJob()) {
+            $extraActions = '<button class="btn btn-primary btn-sm px-3 fw-semibold" data-bs-toggle="modal" data-bs-target="#newJobModal">+ Yeni İlan Yayınla</button>';
+        }
+        include __DIR__ . '/../partials/navbar.php';
+    ?>
 
     <!-- Sayfa Başlığı -->
     <header class="page-header">
@@ -320,5 +302,17 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Dinamik menüdeki 'İlan Yayınla (/jobs?new=1)' tıklandığında modalı aç
+        document.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('new') === '1') {
+                const modalEl = document.getElementById('newJobModal');
+                if (modalEl) {
+                    new bootstrap.Modal(modalEl).show();
+                }
+            }
+        });
+    </script>
 </body>
 </html>

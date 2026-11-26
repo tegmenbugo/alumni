@@ -37,19 +37,12 @@
 </head>
 <body>
 
-    <!-- Ortak Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-custom sticky-top">
-        <div class="container">
-            <a class="navbar-brand d-flex align-items-center gap-2 fw-bold text-dark" href="/">
-                <span style="font-size: 1.6rem;">🎓</span>
-                <span style="color: var(--primary-navy); font-size: 1.1rem;">Alumni Tracking</span>
-            </a>
-            <div class="ms-auto d-flex gap-2 align-items-center flex-wrap">
-                <a href="/jobs" class="btn btn-outline-secondary btn-sm">← Tüm İlanlar</a>
-                <?php include __DIR__ . '/../partials/auth_nav.php'; ?>
-            </div>
-        </div>
-    </nav>
+    <!-- Dinamik Rol Tabanlı Üst Navbar -->
+    <?php
+        $navbarId = 'jobShowNav';
+        $extraActions = '<a href="/jobs" class="btn btn-outline-secondary btn-sm">← Tüm İlanlar</a>';
+        include __DIR__ . '/../partials/navbar.php';
+    ?>
 
     <!-- Header Bölümü -->
     <header class="job-detail-header">

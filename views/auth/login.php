@@ -81,31 +81,12 @@
 </head>
 <body>
 
-    <!-- Ortak Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-custom sticky-top">
-        <div class="container">
-            <a class="navbar-brand d-flex align-items-center gap-2 fw-bold text-dark" href="/">
-                <span style="font-size: 1.6rem;">🎓</span>
-                <span style="color: var(--color-primary); font-size: 1.1rem;">Alumni Tracking</span>
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#loginNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="loginNav">
-                <ul class="navbar-nav me-auto ms-3">
-                    <li class="nav-item"><a class="nav-link" href="/">🏠 Ana Sayfa</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/users">👥 Mezunlar</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/jobs">💼 Kariyer & İlanlar</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/api/swagger" target="_blank">📚 Swagger UI</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/about">ℹ️ Hakkında</a></li>
-                </ul>
-                <div class="d-flex gap-2">
-                    <a href="/login" class="btn btn-primary btn-sm px-3 fw-semibold">🔑 Giriş Yap</a>
-                    <a href="/register" class="btn btn-outline-primary btn-sm px-3 fw-semibold">📝 Kayıt Ol</a>
-                </div>
-            </div>
-        </div>
-    </nav>
+    <!-- Dinamik Rol Tabanlı Üst Navbar -->
+    <?php
+        $navbarId = 'loginNav';
+        $extraActions = '';
+        include __DIR__ . '/../partials/navbar.php';
+    ?>
 
     <main class="container login-wrapper">
         <div class="row g-4 align-items-stretch">
@@ -120,18 +101,22 @@
                         Kariyer fırsatlarını keşfetmek, iş ilanlarına başvurmak veya kendi ilanlarınızı yönetmek için hesabınızla giriş yapın.
                     </p>
 
-                    <h6 class="fw-bold text-uppercase small opacity-75 mb-3">🧪 Demo Hesaplar (Test Amaçlı)</h6>
+                    <h6 class="fw-bold text-uppercase small opacity-75 mb-3">🧪 Demo Hesaplar (Tek Tıkla Doldur)</h6>
 
+                    <div class="demo-account mb-2" onclick="fillDemo('bugrakaratas@alumni.iu.edu.tr', 'Alumni2026!')">
+                        <div class="fw-bold small">👑 Battal Buğra Karataş <span class="badge bg-danger bg-opacity-75 ms-1">admin</span></div>
+                        <div class="small opacity-75">bugrakaratas@alumni.iu.edu.tr · Admin Paneli & tam yetki</div>
+                    </div>
                     <div class="demo-account mb-2" onclick="fillDemo('elif.kaya@alumni.iu.edu.tr', 'Alumni2026!')">
                         <div class="fw-bold small">🎓 Elif Kaya <span class="badge bg-success bg-opacity-75 ms-1">alumnus</span></div>
                         <div class="small opacity-75">elif.kaya@alumni.iu.edu.tr · İlan açabilir & başvurabilir</div>
                     </div>
-                    <div class="demo-account mb-2" onclick="fillDemo('bugrakaratas@alumni.iu.edu.tr', 'Alumni2026!')">
-                        <div class="fw-bold small">📚 Buğra Karataş <span class="badge bg-info bg-opacity-75 ms-1">student</span></div>
-                        <div class="small opacity-75">bugrakaratas@alumni.iu.edu.tr · Sadece başvuru yapabilir</div>
+                    <div class="demo-account mb-2" onclick="fillDemo('ayse.yilmaz@alumni.iu.edu.tr', 'Alumni2026!')">
+                        <div class="fw-bold small">📚 Ayşe Yılmaz <span class="badge bg-info bg-opacity-75 ms-1">student</span></div>
+                        <div class="small opacity-75">ayse.yilmaz@alumni.iu.edu.tr · Sadece başvuru (ilan açamaz)</div>
                     </div>
                     <div class="demo-account mb-2" onclick="fillDemo('dr.aydin@iu.edu.tr', 'Alumni2026!')">
-                        <div class="fw-bold small">🏫 Dr. Aydın <span class="badge bg-warning text-dark bg-opacity-75 ms-1">faculty</span></div>
+                        <div class="fw-bold small">🏫 Dr. Ahmet Aydın <span class="badge bg-warning text-dark bg-opacity-75 ms-1">faculty</span></div>
                         <div class="small opacity-75">dr.aydin@iu.edu.tr · İlan açabilir, akademik referans</div>
                     </div>
 

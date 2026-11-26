@@ -7,7 +7,7 @@ INSERT OR IGNORE INTO users (id, name, email, graduationYear, department, compan
 (2, 'Mert Aydın', 'mert.aydin@alumni.iu.edu.tr', 2021, 'Yönetim Bilişim Sistemleri', 'QNB Finansbank', 'alumnus', 'active'),
 (3, 'Zeynep Arslan', 'zeynep.arslan@alumni.iu.edu.tr', 2019, 'İktisat', 'Hepsiburada', 'alumnus', 'active'),
 (4, 'Can Öztürk', 'can.ozturk@alumni.iu.edu.tr', 2023, 'İşletme', 'McKinsey & Company', 'alumnus', 'active'),
-(5, 'Battal Buğra Karataş', 'bugrakaratas@alumni.iu.edu.tr', 2027, 'Yönetim Bilişim Sistemleri', 'Akadal Technology', 'student', 'active');
+(5, 'Battal Buğra Karataş', 'bugrakaratas@alumni.iu.edu.tr', 2027, 'Yönetim Bilişim Sistemleri', 'Akadal Technology', 'admin', 'active');
 
 -- 2. Skills Başlangıç Kayıtları
 INSERT OR IGNORE INTO skills (id, name, category) VALUES

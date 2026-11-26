@@ -33,6 +33,7 @@ use App\Controllers\ApiJobController;
 use App\Controllers\ApiApplicationController;
 use App\Controllers\ErrorController;
 use App\Controllers\AuthController;
+use App\Controllers\AdminController;
 
 // 2. Global CORS Başlıkları
 header('Access-Control-Allow-Origin: *');
@@ -66,6 +67,17 @@ $router->post('/api/auth/register',[AuthController::class, 'apiRegister']);
 $router->post('/api/auth/login',   [AuthController::class, 'apiLogin']);
 $router->post('/api/auth/logout',  [AuthController::class, 'apiLogout']);
 $router->get('/api/auth/me',       [AuthController::class, 'apiMe']);
+
+// -------------------------------------------------------------
+// YÖNETİCİ PANELİ ROTALARI (Hafta 09 - Görev 5: Admin Panel)
+// -------------------------------------------------------------
+$router->get('/admin',                           [AdminController::class, 'index']);
+$router->post('/admin/users',                    [AdminController::class, 'storeUser']);
+$router->post('/admin/users/{id}/role',          [AdminController::class, 'updateUserRoleStatus']);
+$router->post('/admin/users/{id}/delete',        [AdminController::class, 'deleteUser']);
+$router->post('/admin/jobs/{id}/status',         [AdminController::class, 'updateJobStatus']);
+$router->post('/admin/jobs/{id}/delete',         [AdminController::class, 'deleteJob']);
+$router->post('/admin/applications/{id}/status', [AdminController::class, 'updateApplicationStatus']);
 
 // -------------------------------------------------------------
 // SİSTEM, DOKÜMANTASYON & MİGRASYON ROTALARI (Week 03 & Week 05)

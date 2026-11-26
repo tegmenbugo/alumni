@@ -95,46 +95,12 @@
 </head>
 <body>
 
-    <!-- 1. ÜST NAVİGASYON (NAVBAR) -->
-    <nav class="navbar navbar-expand-lg navbar-custom sticky-top">
-        <div class="container">
-            <a class="navbar-brand d-flex align-items-center gap-2 fw-bold text-dark" href="/">
-                <span style="font-size: 1.8rem;">🎓</span>
-                <div>
-                    <div class="lh-1" style="font-size: 1.15rem; color: var(--primary-blue);">Alumni Tracking</div>
-                    <small class="text-muted" style="font-size: 0.72rem;">İstanbul Üniversitesi YBS</small>
-                </div>
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="mainNav">
-                <ul class="navbar-nav me-auto ms-lg-4 mb-2 mb-lg-0">
-                    <li class="nav-item">
-                        <a class="nav-link active fw-semibold text-primary" href="/">🏠 Ana Sayfa</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link fw-semibold text-dark" href="/users">👥 Mezunlar Portalı</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link fw-semibold text-dark" href="/jobs">💼 Kariyer & İlanlar</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link fw-semibold text-dark" href="/api/swagger" target="_blank">📚 Swagger API</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link fw-semibold text-dark" href="/about">ℹ️ Hakkında</a>
-                    </li>
-                </ul>
-                <div class="d-flex gap-2 align-items-center flex-wrap">
-                    <a href="/jobs" class="btn btn-outline-secondary btn-sm px-3 fw-semibold">
-                        💼 İlanları Gör
-                    </a>
-                    <?php include __DIR__ . '/partials/auth_nav.php'; ?>
-                </div>
-            </div>
-        </div>
-    </nav>
+    <!-- 1. DİNAMİK ROL TABANLI ÜST NAVİGASYON (NAVBAR) -->
+    <?php
+        $navbarId = 'mainNav';
+        $extraActions = '';
+        include __DIR__ . '/partials/navbar.php';
+    ?>
 
     <!-- 2. HERO SECTION (KARŞILAMA ALANI) -->
     <section class="hero-section text-center">
@@ -310,6 +276,13 @@
                             <td><code>/register</code></td>
                             <td><code>AuthController::showRegister() / register()</code> (Kayıt & RBAC)</td>
                             <td class="text-end"><a href="/register" class="btn btn-xs btn-outline-primary py-0">Kayıt Ol</a></td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge bg-danger">Admin Panel</span></td>
+                            <td><span class="badge bg-success">GET / POST</span></td>
+                            <td><code>/admin</code></td>
+                            <td><code>AdminController::index()</code> (Yönetici Paneli & Dinamik Menü)</td>
+                            <td class="text-end"><a href="/admin" class="btn btn-xs btn-outline-danger py-0">Panel</a></td>
                         </tr>
                         <tr>
                             <td><span class="badge bg-info text-dark">Hafta 09</span></td>

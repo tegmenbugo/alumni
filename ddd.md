@@ -484,7 +484,7 @@ Yapay zeka modellerinin ve geliştiricilerin sıfır harici veritabanı ile sist
     "graduationYear": 2027,
     "department": "Yönetim Bilişim Sistemleri",
     "company": "Akadal Technology",
-    "role": "student",
+    "role": "admin",
     "status": "active"
   }
 ]
@@ -498,7 +498,7 @@ INSERT INTO users (id, name, email, graduationYear, department, company, role, s
 (2, 'Mert Aydın', 'mert.aydin@alumni.iu.edu.tr', 2021, 'Yönetim Bilişim Sistemleri', 'QNB Finansbank', 'alumnus', 'active'),
 (3, 'Zeynep Arslan', 'zeynep.arslan@alumni.iu.edu.tr', 2019, 'İktisat', 'Hepsiburada', 'alumnus', 'active'),
 (4, 'Can Öztürk', 'can.ozturk@alumni.iu.edu.tr', 2023, 'İşletme', 'McKinsey & Company', 'alumnus', 'active'),
-(5, 'Battal Buğra Karataş', 'bugrakaratas@alumni.iu.edu.tr', 2027, 'Yönetim Bilişim Sistemleri', 'Akadal Technology', 'student', 'active');
+(5, 'Battal Buğra Karataş', 'bugrakaratas@alumni.iu.edu.tr', 2027, 'Yönetim Bilişim Sistemleri', 'Akadal Technology', 'admin', 'active');
 
 -- SKILLS BAŞLANGIÇ VERİLERİ
 INSERT INTO skills (name, category) VALUES
@@ -630,7 +630,7 @@ Sistemdeki hangi kullanıcının/rolün hangi özelliğe erişebileceğini tanı
 | **İlana Başvuru Yapma** (`POST /jobs/{id}/apply`, `POST /api/jobs/{id}/applications`) | ❌ `401` | ✅ | ✅ | ❌ `403` | ❌ `403` | Yalnızca `student` ve `alumnus` aktif ilanlara başvurabilir. **Kendi İlanına Başvuru Yasağı:** İlan sahibi kendi ilanı için başvuru yapamaz. |
 | **Kendi Başvurularını Takip / Geri Çekme** (`GET /api/users/{id}/applications`) | ❌ `401` | ✅ *(Kendi)* | ✅ *(Kendi)* | ❌ `403` | ✅ *(Tümü)* | Kullanıcı yalnızca kendi başvurularını (`applicant_user_id === auth.id`) görebilir ve `withdrawn` durumuna çekebilir. |
 | **İlana Gelen Başvuruları İnceleme & Kabul/Ret** (`GET /api/jobs/{id}/applications`, `PATCH /api/applications/{id}`) | ❌ `401` | ❌ `403` | ✅ *(Kendi İlanı)* | ✅ *(Kendi İlanı)* | ✅ *(Tümü)* | Başvuruları görüntüleme ve `reviewing`/`interview`/`accepted`/`rejected` güncellemesi yalnızca ilanın sahibine (`posted_by_user_id === auth.id`) veya `admin`'e aittir. |
-| **Sistem Yönetimi, Migrasyonlar & Loglar** (`GET /api/migrations`, `logs/error.logs`, `/api/test-500`) | ❌ `401` | ❌ `403` | ❌ `403` | ❌ `403` | ✅ | Üretim (Production) modunda yalnızca `admin` rolü sistem altyapısı ve hata günlüklerine erişebilir. |
+| **Sistem Yönetimi, Admin Paneli, Migrasyonlar & Loglar** (`GET /admin`, `POST /admin/*`, `GET /api/migrations`, `logs/error.logs`) | ❌ `401` | ❌ `403` | ❌ `403` | ❌ `403` | ✅ | Yalnızca `admin` rolü Yönetici Paneli'ne erişebilir; kullanıcı rolü/durumu değiştirebilir, ilan ve başvuruları modere edebilir, sistem loglarını görür. |
 
 ---
 
@@ -768,6 +768,7 @@ Sistem mimarisine sunucu kararlılığını, hata izlenebilirliğini ve rol bazl
 | `008_update_job_postings_table.sql` | (Hafta 06) İlan tablosu genişletme (workplace, salary, requirements) | `job_postings` |
 | `009_update_job_applications_table.sql` | (Hafta 06) Başvuru tablosu genişletme (resume, portfolio, notes, interview) | `job_applications` |
 | `010_add_password_hash_to_users_table.sql` | (Hafta 09) Kullanıcı kayıt (Register) ve parola özeti (`password_hash`) ile rol/durum indeksleri | `users` |
+| `011_assign_admin_role_to_owner.sql` | (Hafta 09) Proje sahibine (`bugrakaratas@alumni.iu.edu.tr`) `admin` rolü atama ve test rol hesapları | `users` |
 
 ### CLI ve API Üzerinden Çalıştırma:
 ```bash
@@ -813,4 +814,4 @@ Sistemin ilk açılışta zengin ve dinamik mezun verileriyle dolup taşması i�
 * [x] **Hafta 06:** Çoklu tablo ilişkileri (`job_postings`, `job_applications`), doğrudan ve iç içe (nested) rotalar, bekleyen migrasyonlar (008, 009) ve iş ilanları web arayüzü (UI).
 * [x] **Hafta 07:** İş Kuralları (Business Rules & Validation Contract), Postman geçersiz istek testleri, `LoggerMiddleware` (terminal ve dosya kaydı), `NotFoundGuardianMiddleware` (404 Guardian) ve `ServerErrorGuardianMiddleware` (5xx Guardian).
 * [x] **Hafta 08:** Geçici Dalda İş Akışı (`feature/homepage-design`), Marka Rehberi ([brand.md](./brand.md)) ve [VoltAgent/awesome-design-md](https://github.com/VoltAgent/awesome-design-md) standartlarında Tasarım Şartnamesi ([DESIGN.md](./DESIGN.md)).
-* [x] **Hafta 09:** Yetkilendirme Mimarisi (RBAC Rol Matrisi: `guest`, `student`, `alumnus`, `faculty`, `admin`), Sahiplik Kuralları, Kayıt Sayfası (`/register`), Giriş & Çıkış (`/login`, `/logout`, `/api/auth/login`, `/api/auth/logout`, `/api/auth/me`), `AuthController`, `AuthMiddleware` (RBAC & İş İlanı/Başvuru/Sahiplik Bekçisi), `views/errors/403.php`, `password_hash` Güvenliği ve `010_add_password_hash_to_users_table.sql`.
+* [x] **Hafta 09:** Yetkilendirme Mimarisi (RBAC Rol Matrisi: `guest`, `student`, `alumnus`, `faculty`, `admin`), Sahiplik Kuralları, Kayıt Sayfası (`/register`), Giriş & Çıkış (`/login`, `/logout`, `/api/auth/*`), `AuthController`, `AuthMiddleware` (RBAC & İş İlanı/Başvuru/Sahiplik Bekçisi), Yönetici Paneli (`AdminController`, `/admin`, proje sahibine `admin` rolü ataması ve veri manipülasyonu), Rol Tabanlı Dinamik Navigasyon (`AuthMiddleware::getNavigationMenu()` & `views/partials/navbar.php`), `views/errors/403.php`, `password_hash` Güvenliği ve `010` & `011` migrasyonları.

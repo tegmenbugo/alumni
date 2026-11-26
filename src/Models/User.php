@@ -140,6 +140,54 @@ class User
                 // migrations tablosu yoksa sessizce geç
             }
         }
+
+        // Migrasyon 011: Proje sahibine admin rolü ve demo test hesaplarını 1 kez uygula
+        try {
+            $check011 = $db->prepare("SELECT COUNT(*) FROM migrations WHERE migration = :m");
+            $check011->execute([':m' => '011_assign_admin_role_to_owner.sql']);
+            $already011 = (int)$check011->fetchColumn() > 0;
+        } catch (\Exception $e) {
+            $already011 = false;
+        }
+
+        if (!$already011) {
+            try {
+                // Proje sahibine admin rolü ata
+                $upOwner = $db->prepare("UPDATE users SET role = 'admin', status = 'active' WHERE LOWER(email) = 'bugrakaratas@alumni.iu.edu.tr'");
+                $upOwner->execute();
+
+                // Eksik demo rolleri varsa ekle (student & faculty testleri için)
+                $demoAccounts = [
+                    ['Battal Buğra Karataş', 'bugrakaratas@alumni.iu.edu.tr', 2027, 'Yönetim Bilişim Sistemleri', 'Akadal Technology', 'admin'],
+                    ['Ayşe Yılmaz', 'ayse.yilmaz@alumni.iu.edu.tr', 2027, 'Yönetim Bilişim Sistemleri', 'İstanbul Üniversitesi', 'student'],
+                    ['Dr. Ahmet Aydın', 'dr.aydin@iu.edu.tr', 2012, 'Yönetim Bilişim Sistemleri', 'İstanbul Üniversitesi YBS', 'faculty'],
+                ];
+
+                foreach ($demoAccounts as $acc) {
+                    $chk = $db->prepare("SELECT id FROM users WHERE LOWER(email) = LOWER(:email) LIMIT 1");
+                    $chk->execute([':email' => $acc[1]]);
+                    if (!$chk->fetch()) {
+                        $ins = $db->prepare("
+                            INSERT INTO users (name, email, graduationYear, department, company, role, status)
+                            VALUES (:name, :email, :year, :dept, :comp, :role, 'active')
+                        ");
+                        $ins->execute([
+                            ':name'  => $acc[0],
+                            ':email' => $acc[1],
+                            ':year'  => $acc[2],
+                            ':dept'  => $acc[3],
+                            ':comp'  => $acc[4],
+                            ':role'  => $acc[5],
+                        ]);
+                    }
+                }
+
+                $insMig = $db->prepare("INSERT OR IGNORE INTO migrations (migration) VALUES (:m)");
+                $insMig->execute([':m' => '011_assign_admin_role_to_owner.sql']);
+            } catch (\Exception $e) {
+                // migrations tablosu yoksa veya kısıt hatası varsa sessizce geç
+            }
+        }
     }
 
     /**
@@ -403,6 +451,67 @@ class User
         $stmt->execute($params);
 
         return self::find($id);
+    }
+
+    /**
+     * ADMIN PANEL (Hafta 09 Görev 5): Kullanıcının rolünü ve hesap durumunu günceller.
+     */
+    public static function updateRoleAndStatus(int $id, string $role, string $status): ?array
+    {
+        $existing = self::find($id);
+        if (!$existing) {
+            return null;
+        }
+
+        $allowedRoles    = ['student', 'alumnus', 'faculty', 'admin'];
+        $allowedStatuses = ['active', 'pending', 'suspended'];
+
+        $safeRole   = in_array($role, $allowedRoles, true) ? $role : $existing['role'];
+        $safeStatus = in_array($status, $allowedStatuses, true) ? $status : $existing['status'];
+
+        $db = self::getDb();
+        $stmt = $db->prepare("UPDATE users SET role = :role, status = :status WHERE id = :id");
+        $stmt->execute([
+            ':role'   => $safeRole,
+            ':status' => $safeStatus,
+            ':id'     => $id,
+        ]);
+
+        return self::find($id);
+    }
+
+    /**
+     * ADMIN PANEL (Hafta 09 Görev 5): Admin tarafından herhangi bir rol ve parola ile kullanıcı oluşturur.
+     */
+    public static function adminCreate(array $data): array
+    {
+        self::ensureAuthColumns();
+
+        $allowedRoles    = ['student', 'alumnus', 'faculty', 'admin'];
+        $allowedStatuses = ['active', 'pending', 'suspended'];
+
+        $role   = in_array($data['role'] ?? 'alumnus', $allowedRoles, true) ? $data['role'] : 'alumnus';
+        $status = in_array($data['status'] ?? 'active', $allowedStatuses, true) ? $data['status'] : 'active';
+        $plain  = trim((string)($data['password'] ?? ''));
+        $hash   = $plain !== '' ? password_hash($plain, PASSWORD_BCRYPT) : password_hash('Alumni2026!', PASSWORD_BCRYPT);
+
+        $db = self::getDb();
+        $stmt = $db->prepare("
+            INSERT INTO users (name, email, password_hash, graduationYear, department, company, role, status)
+            VALUES (:name, :email, :password_hash, :graduationYear, :department, :company, :role, :status)
+        ");
+        $stmt->execute([
+            ':name'           => trim($data['name']),
+            ':email'          => strtolower(trim($data['email'])),
+            ':password_hash'  => $hash,
+            ':graduationYear' => isset($data['graduationYear']) && $data['graduationYear'] !== '' ? (int)$data['graduationYear'] : null,
+            ':department'     => trim($data['department'] ?? 'Yönetim Bilişim Sistemleri'),
+            ':company'        => isset($data['company']) && trim($data['company']) !== '' ? trim($data['company']) : null,
+            ':role'           => $role,
+            ':status'         => $status,
+        ]);
+
+        return self::find((int)$db->lastInsertId());
     }
 
     /**

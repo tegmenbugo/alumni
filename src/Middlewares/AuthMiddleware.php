@@ -329,6 +329,105 @@ class AuthMiddleware
     }
 
     /**
+     * DİNAMİK NAVİGASYON MENÜSÜ (Hafta 09 - Görev 6: Dynamic Navigation by User Role)
+     * Oturum açan kullanıcının rolüne göre ('guest', 'student', 'alumnus', 'faculty', 'admin')
+     * yalnızca erişim yetkisi olduğu menü öğelerini döndürür.
+     */
+    public static function getNavigationMenu(): array
+    {
+        $user = self::user();
+        $role = $user['role'] ?? 'guest';
+
+        $items = [
+            [
+                'id'     => 'home',
+                'label'  => 'Ana Sayfa',
+                'icon'   => '🏠',
+                'href'   => '/',
+                'roles'  => ['guest', 'student', 'alumnus', 'faculty', 'admin'],
+                'target' => '_self',
+                'badge'  => null,
+            ],
+            [
+                'id'     => 'users',
+                'label'  => 'Mezunlar',
+                'icon'   => '👥',
+                'href'   => '/users',
+                'roles'  => ['guest', 'student', 'alumnus', 'faculty', 'admin'],
+                'target' => '_self',
+                'badge'  => null,
+            ],
+            [
+                'id'     => 'jobs',
+                'label'  => 'Kariyer & İlanlar',
+                'icon'   => '💼',
+                'href'   => '/jobs',
+                'roles'  => ['guest', 'student', 'alumnus', 'faculty', 'admin'],
+                'target' => '_self',
+                'badge'  => null,
+            ],
+            [
+                'id'     => 'post_job',
+                'label'  => 'İlan Yayınla',
+                'icon'   => '➕',
+                'href'   => '/jobs?new=1',
+                'roles'  => ['alumnus', 'faculty', 'admin'], // student ve guest göremez!
+                'target' => '_self',
+                'badge'  => null,
+            ],
+            [
+                'id'     => 'profile',
+                'label'  => 'Profilim',
+                'icon'   => '👤',
+                'href'   => $user ? ('/users/' . (int)$user['id']) : '/login',
+                'roles'  => ['student', 'alumnus', 'faculty', 'admin'], // Sadece giriş yapmış kullanıcılar
+                'target' => '_self',
+                'badge'  => null,
+            ],
+            [
+                'id'     => 'admin',
+                'label'  => 'Admin Paneli',
+                'icon'   => '🛡️',
+                'href'   => '/admin',
+                'roles'  => ['admin'], // Yalnızca Sistem Yöneticisi görür!
+                'target' => '_self',
+                'badge'  => 'ADMIN',
+            ],
+            [
+                'id'     => 'migrations',
+                'label'  => 'Migrasyonlar',
+                'icon'   => '⚙️',
+                'href'   => '/api/migrations',
+                'roles'  => ['admin'], // Yalnızca Sistem Yöneticisi görür!
+                'target' => '_blank',
+                'badge'  => null,
+            ],
+            [
+                'id'     => 'swagger',
+                'label'  => 'Swagger API',
+                'icon'   => '📚',
+                'href'   => '/api/swagger',
+                'roles'  => ['alumnus', 'faculty', 'admin'], // Geliştirici & yetkili roller
+                'target' => '_blank',
+                'badge'  => null,
+            ],
+            [
+                'id'     => 'about',
+                'label'  => 'Hakkında',
+                'icon'   => 'ℹ️',
+                'href'   => '/about',
+                'roles'  => ['guest', 'student', 'alumnus', 'faculty', 'admin'],
+                'target' => '_self',
+                'badge'  => null,
+            ],
+        ];
+
+        return array_values(array_filter($items, function (array $item) use ($role) {
+            return in_array($role, $item['roles'], true);
+        }));
+    }
+
+    /**
      * İsteğin JSON tabanlı bir API çağrısı olup olmadığını algılar.
      */
     private static function isJsonRequest(): bool

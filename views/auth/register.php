@@ -75,30 +75,12 @@
 </head>
 <body>
 
-    <!-- Ortak Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-custom sticky-top">
-        <div class="container">
-            <a class="navbar-brand d-flex align-items-center gap-2 fw-bold text-dark" href="/">
-                <span style="font-size: 1.6rem;">🎓</span>
-                <span style="color: var(--color-primary); font-size: 1.1rem;">Alumni Tracking</span>
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#regNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="regNav">
-                <ul class="navbar-nav me-auto ms-3">
-                    <li class="nav-item"><a class="nav-link" href="/">🏠 Ana Sayfa</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/users">👥 Mezunlar</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/jobs">💼 Kariyer & İlanlar</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/api/swagger" target="_blank">📚 Swagger UI</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/about">ℹ️ Hakkında</a></li>
-                </ul>
-                <div class="d-flex gap-2 align-items-center">
-                    <?php include __DIR__ . '/../partials/auth_nav.php'; ?>
-                </div>
-            </div>
-        </div>
-    </nav>
+    <!-- Dinamik Rol Tabanlı Üst Navbar -->
+    <?php
+        $navbarId = 'regNav';
+        $extraActions = '';
+        include __DIR__ . '/../partials/navbar.php';
+    ?>
 
     <main class="container auth-wrapper">
         <div class="row g-4 align-items-stretch">

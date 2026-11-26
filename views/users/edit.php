@@ -32,17 +32,13 @@
 </head>
 <body>
 
-    <nav class="navbar navbar-expand-lg navbar-custom sticky-top mb-4">
-        <div class="container">
-            <a class="navbar-brand d-flex align-items-center gap-2 fw-bold text-dark" href="/">
-                <span style="font-size: 1.6rem;">🎓</span>
-                <span style="color: var(--primary-navy); font-size: 1.1rem;">Alumni Tracking</span>
-            </a>
-            <div class="ms-auto d-flex gap-2">
-                <a href="/users/<?= $user['id'] ?>" class="btn btn-outline-secondary btn-sm">← Profile Dön</a>
-            </div>
-        </div>
-    </nav>
+    <!-- Dinamik Rol Tabanlı Üst Navbar -->
+    <?php
+        $navbarId = 'userEditNav';
+        $extraActions = '<a href="/users/' . (int)$user['id'] . '" class="btn btn-outline-secondary btn-sm">← Profile Dön</a>';
+        include __DIR__ . '/../partials/navbar.php';
+    ?>
+    <div class="mb-4"></div>
 
     <main class="container pb-5">
         <div class="row justify-content-center">
